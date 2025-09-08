@@ -1,6 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
+export async function GET() {
+  try {
+    const apartments = await prisma.apartment.findMany({
+      include: {
+        apartmentImages: {
+          where: { isMain: true },
+          take: 1
+        },
+        _count: {
+          select: {
+            bookings: true,
+            reviews: true
+          }
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    })
+
+    return NextResponse.json(apartments)
+  } catch (error) {
+    console.error('Error fetching apartments:', error)
+    return NextResponse.json(
+      { error: 'Failed to fetch apartments' },
+      { status: 500 }
+    )
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const data = await request.json()

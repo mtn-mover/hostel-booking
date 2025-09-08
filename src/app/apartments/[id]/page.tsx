@@ -127,10 +127,10 @@ export default async function ApartmentDetailPage({ params }: ApartmentDetailPro
       where: {
         apartmentId: apartment.id,
         isActive: true,
-        date: {
-          gte: todayStr,
-          lte: endDateStr
-        }
+        AND: [
+          { startDate: { lte: endDateStr } },
+          { endDate: { gte: todayStr } }
+        ]
       }
     })
   ])
@@ -158,7 +158,9 @@ export default async function ApartmentDetailPage({ params }: ApartmentDetailPro
     let calculatedPrice = apartment.price
     
     // Check for event price first (highest priority)
-    const eventPrice = eventPrices.find(ep => ep.date === dateStr)
+    const eventPrice = eventPrices.find(ep => 
+      dateStr >= ep.startDate && dateStr <= ep.endDate
+    )
     if (eventPrice) {
       calculatedPrice = eventPrice.price
     } else {

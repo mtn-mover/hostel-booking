@@ -31,22 +31,14 @@ export function Navigation() {
             <Link href="/" className="text-gray-600 hover:text-gray-900 font-medium">
               Home
             </Link>
-            <Link href="/apartments" className="text-gray-600 hover:text-gray-900 font-medium">
-              Apartments
-            </Link>
-            <Link href="/apartments/compare" className="text-gray-600 hover:text-gray-900 font-medium">
-              Compare
-            </Link>
-            {session?.user?.role === 'ADMIN' && (
-              <Link href="/admin" className="text-gray-600 hover:text-gray-900 font-medium">
-                Admin
-              </Link>
-            )}
             <Link href="/about" className="text-gray-600 hover:text-gray-900 font-medium">
               About
             </Link>
             <Link href="/contact" className="text-gray-600 hover:text-gray-900 font-medium">
               Contact
+            </Link>
+            <Link href="/become-host" className="text-gray-600 hover:text-gray-900 font-medium">
+              Become a Host
             </Link>
           </div>
 
@@ -79,7 +71,7 @@ export function Navigation() {
                       My Profile
                     </Link>
                     <Link
-                      href="/bookings"
+                      href="/my-bookings"
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                       onClick={() => setShowUserMenu(false)}
                     >
@@ -105,11 +97,11 @@ export function Navigation() {
               </div>
             ) : (
               <>
-                <Link href="/auth/signin" className="text-gray-600 hover:text-gray-900 font-medium">
-                  Sign In
-                </Link>
-                <Link href="/auth/signup" className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition font-medium">
+                <Link href="/auth/signup" className="text-gray-600 hover:text-gray-900 font-medium">
                   Sign Up
+                </Link>
+                <Link href="/auth/signin" className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition font-medium">
+                  Sign In
                 </Link>
               </>
             )}

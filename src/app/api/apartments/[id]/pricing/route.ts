@@ -100,10 +100,10 @@ export async function GET(
         where: {
           apartmentId: id,
           isActive: true,
-          date: {
-            gte: startDateStr,
-            lte: endDateStr
-          }
+          AND: [
+            { startDate: { lte: endDateStr } },
+            { endDate: { gte: startDateStr } }
+          ]
         }
       })
     ])

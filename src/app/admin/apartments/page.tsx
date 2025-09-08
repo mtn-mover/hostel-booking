@@ -1,23 +1,101 @@
-import { prisma } from '@/lib/prisma'
+'use client'
+
+import { useState, useEffect } from 'react'
 import { formatPrice } from '@/lib/utils'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 
-export default async function AdminApartments() {
-  const apartments = await prisma.apartment.findMany({
-    include: {
-      apartmentImages: {
-        where: { isMain: true },
-        take: 1
-      },
-      _count: {
-        select: {
-          bookings: true,
-          reviews: true
-        }
+interface Apartment {
+  id: string
+  title: string
+  description: string
+  price: number
+  location: string
+  maxGuests: number
+  bedrooms: number
+  bathrooms: number
+  isActive: boolean
+  createdAt: string
+  apartmentImages: { url: string }[]
+  _count: {
+    bookings: number
+    reviews: number
+  }
+}
+
+export default function AdminApartments() {
+  const router = useRouter()
+  const [apartments, setApartments] = useState<Apartment[]>([])
+  const [loading, setLoading] = useState(true)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+
+  useEffect(() => {
+    fetchApartments()
+  }, [])
+
+  const fetchApartments = async () => {
+    try {
+      const response = await fetch('/api/admin/apartments')
+      if (!response.ok) throw new Error('Failed to fetch')
+      const data = await response.json()
+      setApartments(data)
+    } catch (error) {
+      console.error('Error fetching apartments:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleDelete = async (id: string, title: string) => {
+    if (!confirm(`Are you sure you want to delete "${title}"? This action cannot be undone.`)) {
+      return
+    }
+
+    setDeletingId(id)
+    try {
+      const response = await fetch(`/api/admin/apartments/${id}/delete`, {
+        method: 'DELETE'
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        alert(error.error || 'Failed to delete apartment')
+        return
       }
-    },
-    orderBy: { createdAt: 'desc' }
-  })
+
+      // Remove from list
+      setApartments(prev => prev.filter(apt => apt.id !== id))
+      alert('Apartment deleted successfully')
+    } catch (error) {
+      console.error('Error deleting apartment:', error)
+      alert('Failed to delete apartment')
+    } finally {
+      setDeletingId(null)
+    }
+  }
+
+  const handleToggleActive = async (id: string, currentStatus: boolean) => {
+    try {
+      const response = await fetch(`/api/admin/apartments/${id}/toggle-active`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isActive: !currentStatus })
+      })
+
+      if (!response.ok) throw new Error('Failed to update')
+
+      setApartments(prev => prev.map(apt => 
+        apt.id === id ? { ...apt, isActive: !currentStatus } : apt
+      ))
+    } catch (error) {
+      console.error('Error toggling status:', error)
+      alert('Failed to update apartment status')
+    }
+  }
+
+  if (loading) {
+    return <div className="p-8 text-center">Loading apartments...</div>
+  }
 
   return (
     <div className="space-y-8">
@@ -48,79 +126,100 @@ export default async function AdminApartments() {
             </Link>
           </div>
         ) : (
-          <div className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {apartments.map((apartment) => (
-                <div key={apartment.id} className="border rounded-lg overflow-hidden">
-                  {apartment.apartmentImages[0] && (
-                    <img
-                      src={apartment.apartmentImages[0].url}
-                      alt={apartment.title || apartment.name || 'Apartment'}
-                      className="w-full h-48 object-cover"
-                    />
-                  )}
-                  <div className="p-4">
-                    <div className="flex justify-between items-start mb-2">
-                      <h3 className="text-lg font-semibold text-gray-900">
-                        {apartment.title || apartment.name || 'Apartment'}
-                      </h3>
-                      <span className={`inline-flex items-center px-2 py-1 text-xs rounded-full font-medium ${
-                        apartment.isActive 
-                          ? 'bg-green-100 text-green-700' 
-                          : 'bg-gray-100 text-gray-600'
-                      }`}>
-                        {apartment.isActive ? (
-                          <>
-                            <span className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1"></span>
-                            Active
-                          </>
-                        ) : (
-                          <>
-                            <span className="w-1.5 h-1.5 bg-gray-400 rounded-full mr-1"></span>
-                            Inactive
-                          </>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Apartment
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Location
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Price
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Stats
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {apartments.map((apartment) => (
+                  <tr key={apartment.id} className={deletingId === apartment.id ? 'opacity-50' : ''}>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        {apartment.apartmentImages[0] && (
+                          <img
+                            src={apartment.apartmentImages[0].url}
+                            alt={apartment.title}
+                            className="w-12 h-12 rounded-lg object-cover mr-4"
+                          />
                         )}
-                      </span>
-                    </div>
-                    <p className="text-gray-600 text-sm mb-3 line-clamp-2">
-                      {apartment.shortDescription || apartment.description}
-                    </p>
-                    <div className="space-y-2 text-sm text-gray-600">
-                      <div className="flex justify-between">
-                        <span>Max Guests:</span>
-                        <span>{apartment.maxGuests}</span>
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">
+                            {apartment.title}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {apartment.bedrooms} bed • {apartment.bathrooms} bath • {apartment.maxGuests} guests
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex justify-between">
-                        <span>Price/Night:</span>
-                        <span className="font-semibold">{formatPrice(apartment.price)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Bookings:</span>
-                        <span>{apartment._count.bookings}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Reviews:</span>
-                        <span>{apartment._count.reviews}</span>
-                      </div>
-                    </div>
-                    <div className="flex gap-2 mt-4">
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {apartment.location}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {formatPrice(apartment.price)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <div>{apartment._count.bookings} bookings</div>
+                      <div>{apartment._count.reviews} reviews</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <button
+                        onClick={() => handleToggleActive(apartment.id, apartment.isActive)}
+                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full cursor-pointer ${
+                          apartment.isActive
+                            ? 'bg-green-100 text-green-800 hover:bg-green-200'
+                            : 'bg-red-100 text-red-800 hover:bg-red-200'
+                        }`}
+                      >
+                        {apartment.isActive ? 'Active' : 'Inactive'}
+                      </button>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                       <Link
                         href={`/admin/apartments/${apartment.id}`}
-                        className="flex-1 bg-blue-600 text-white text-center py-2 px-3 rounded text-sm hover:bg-blue-700 transition"
+                        className="text-blue-600 hover:text-blue-900"
                       >
                         Edit
                       </Link>
                       <Link
                         href={`/apartments/${apartment.id}`}
-                        className="flex-1 bg-gray-200 text-gray-800 text-center py-2 px-3 rounded text-sm hover:bg-gray-300 transition"
+                        className="text-green-600 hover:text-green-900"
+                        target="_blank"
                       >
                         View
                       </Link>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+                      <button
+                        onClick={() => handleDelete(apartment.id, apartment.title)}
+                        disabled={deletingId === apartment.id}
+                        className="text-red-600 hover:text-red-900 disabled:opacity-50"
+                      >
+                        {deletingId === apartment.id ? 'Deleting...' : 'Delete'}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </div>
