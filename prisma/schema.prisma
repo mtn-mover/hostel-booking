@@ -1,0 +1,435 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?   // For credential-based authentication
+  role          Role      @default(GUEST)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts Account[]
+  sessions Session[]
+  bookings Booking[]
+  reviews  Review[]
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Apartment {
+  id               String   @id @default(cuid())
+  title            String   @default("Apartment")
+  name             String?  // Legacy field
+  description      String
+  shortDescription String?
+  maxGuests        Int
+  bedrooms         Int
+  beds             Int      @default(1)
+  bathrooms        Int
+  size             Int?     // in square meters
+  price            Float    @default(120)
+  pricePerNight    Float?   // Legacy field
+  pricePerWeek     Float?
+  pricePerMonth    Float?
+  cleaningFee      Float    @default(50)
+  minStayNights    Int      @default(1)
+  maxStayNights    Int?
+  isActive         Boolean  @default(true)
+  bookingHorizon   String?  // Date string in YYYY-MM-DD format for max booking date
+  
+  // Location
+  address          String?
+  city             String    @default("Interlaken")
+  country          String    @default("Switzerland")
+  latitude         Float?
+  longitude        Float?
+  
+  // Ratings
+  rating           Float?
+  reviewCount      Int      @default(0)
+  
+  // Airbnb integration
+  airbnbId         String?  @unique
+  airbnbUrl        String?
+  airbnbListingId  String?  @unique // Legacy field
+  icalUrl          String?
+  lastSynced       DateTime?
+  
+  // JSON fields for complex data
+  images           String    @default("[]") // JSON array of image URLs
+  amenities        String    @default("[]") // JSON array of amenity names
+  
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  apartmentImages  ApartmentImage[]
+  apartmentAmenities ApartmentAmenity[]
+  bookings         Booking[]
+  reviews          Review[]
+  availabilities   Availability[]
+  pricingRules     PricingRule[]
+  seasonPrices     SeasonPrice[]
+  eventPrices      EventPrice[]
+  discountRules    DiscountRule[]
+}
+
+model ApartmentImage {
+  id          String  @id @default(cuid())
+  apartmentId String
+  url         String
+  alt         String?
+  order       Int     @default(0)
+  isMain      Boolean @default(false)
+  roomId      String? // Reference to room category
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now()) @updatedAt
+
+  apartment Apartment @relation(fields: [apartmentId], references: [id], onDelete: Cascade)
+  room      RoomCategory? @relation(fields: [roomId], references: [id], onDelete: SetNull)
+  
+  @@index([apartmentId, roomId])
+}
+
+model Amenity {
+  id          String @id @default(cuid())
+  name        String @unique
+  icon        String? // Icon name or URL
+  category    String? // e.g., "Kitchen", "Bathroom", "Entertainment"
+  description String?
+
+  apartments ApartmentAmenity[]
+}
+
+model ApartmentAmenity {
+  apartmentId String
+  amenityId   String
+
+  apartment Apartment @relation(fields: [apartmentId], references: [id], onDelete: Cascade)
+  amenity   Amenity   @relation(fields: [amenityId], references: [id], onDelete: Cascade)
+
+  @@id([apartmentId, amenityId])
+}
+
+model Booking {
+  id                String        @id @default(cuid())
+  userId            String
+  apartmentId       String
+  checkIn           DateTime
+  checkOut          DateTime
+  guests            Int
+  totalPrice        Float
+  status            BookingStatus @default(PENDING)
+  paymentStatus     PaymentStatus @default(PENDING)
+  paymentIntentId   String?       @unique // Stripe Payment Intent ID
+  specialRequests   String?
+  guestName         String
+  guestEmail        String
+  guestPhone        String?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  cancelledAt       DateTime?
+  cancellationReason String?
+
+  user      User      @relation(fields: [userId], references: [id])
+  apartment Apartment @relation(fields: [apartmentId], references: [id])
+  reviews   Review[]
+}
+
+model Review {
+  id          String   @id @default(cuid())
+  userId      String
+  apartmentId String
+  bookingId   String   @unique
+  rating      Int // 1-5 stars
+  title       String?
+  comment     String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user      User      @relation(fields: [userId], references: [id])
+  apartment Apartment @relation(fields: [apartmentId], references: [id])
+  booking   Booking   @relation(fields: [bookingId], references: [id])
+}
+
+model Availability {
+  id              String             @id @default(cuid())
+  apartmentId     String
+  date            DateTime
+  status          AvailabilityStatus @default(AVAILABLE)
+  priceOverride   Float?             // Override default price for this date
+  minStayOverride Int?               // Override minimum stay for this date
+  reason          String?            // Reason for unavailability
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  apartment Apartment @relation(fields: [apartmentId], references: [id], onDelete: Cascade)
+
+  @@unique([apartmentId, date])
+}
+
+// Season Pricing
+model SeasonPrice {
+  id          String      @id @default(cuid())
+  apartmentId String
+  name        String      // e.g., "High Season", "Mid Season", "Low Season"
+  type        PriceType   // HIGH_SEASON, MID_SEASON, LOW_SEASON, SPECIAL_EVENT
+  price       Float       // Actual price for this period
+  startDate   String      // Date string in YYYY-MM-DD format
+  endDate     String      // Date string in YYYY-MM-DD format
+  priority    Int         @default(0) // Higher priority wins (events > seasons)
+  isActive    Boolean     @default(true)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  apartment Apartment @relation(fields: [apartmentId], references: [id], onDelete: Cascade)
+  
+  @@index([apartmentId, startDate, endDate])
+}
+
+// Special Event Pricing
+model EventPrice {
+  id          String   @id @default(cuid())
+  apartmentId String
+  eventName   String   // e.g., "Christmas", "New Year", "Jazz Festival"
+  date        String   // Event date in YYYY-MM-DD format
+  price       Float    // Price for this specific date
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  apartment Apartment @relation(fields: [apartmentId], references: [id], onDelete: Cascade)
+  
+  @@unique([apartmentId, date])
+  @@index([apartmentId, date])
+}
+
+// Discount Rules based on number of nights
+model DiscountRule {
+  id          String   @id @default(cuid())
+  apartmentId String
+  minNights   Int      // Minimum nights to get this discount
+  percentage  Float    // Discount percentage (e.g., 10 for 10% off)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  apartment Apartment @relation(fields: [apartmentId], references: [id], onDelete: Cascade)
+  
+  @@unique([apartmentId, minNights])
+  @@index([apartmentId])
+}
+
+model PricingRule {
+  id            String      @id @default(cuid())
+  apartmentId   String
+  name          String
+  startDate     DateTime?   // null means always active
+  endDate       DateTime?   // null means no end date
+  dayOfWeek     Int?        // 0=Sunday, 1=Monday, etc. null means all days
+  seasonType    SeasonType? // HIGH, LOW, PEAK seasons
+  priceModifier Float       // e.g., 1.2 for 20% increase, 0.8 for 20% decrease
+  minStay       Int?        // Override minimum stay
+  isActive      Boolean     @default(true)
+  priority      Int         @default(0) // Higher priority rules take precedence
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  apartment Apartment @relation(fields: [apartmentId], references: [id], onDelete: Cascade)
+}
+
+// Enums
+enum Role {
+  GUEST
+  ADMIN
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum AvailabilityStatus {
+  AVAILABLE
+  BOOKED
+  BLOCKED
+  MAINTENANCE
+}
+
+enum SeasonType {
+  LOW
+  REGULAR
+  HIGH
+  PEAK
+}
+
+enum PriceType {
+  OFFICIAL        // Official base price
+  HIGH_SEASON     // High season price
+  MID_SEASON      // Mid season price  
+  LOW_SEASON      // Low season price
+  SPECIAL_EVENT   // Special event price
+}
+
+// Chat Learning Models
+model ChatSession {
+  id           String   @id @default(cuid())
+  sessionId    String   @unique
+  userId       String?
+  guestName    String?
+  language     String   @default("en")
+  startedAt    DateTime @default(now())
+  endedAt      DateTime?
+  escalated    Boolean  @default(false)
+  resolved     Boolean  @default(false)
+  
+  messages     ChatMessage[]
+  learnings    ChatLearning[]
+}
+
+model ChatMessage {
+  id           String   @id @default(cuid())
+  sessionId    String
+  role         String   // "user", "assistant", "system", "admin"
+  content      String
+  confidence   Float?   // Claude's confidence score
+  timestamp    DateTime @default(now())
+  isEscalation Boolean  @default(false)
+  
+  session      ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+}
+
+model ChatLearning {
+  id                     String   @id @default(cuid())
+  sessionId              String
+  originalQuestion       String
+  claudeResponse         String?
+  claudeConfidence       Float?
+  escalationReason       String?
+  adminResponse          String?
+  adminResponseSequence  String?  // JSON array of admin messages
+  guestSatisfaction      Int?     // 1-5 rating
+  learningExtracted      String?  // JSON of extracted facts
+  appliedToKnowledge     Boolean  @default(false)
+  createdAt              DateTime @default(now())
+  
+  session                ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+}
+
+model LearnedKnowledge {
+  id               String   @id @default(cuid())
+  category         String   // "checkin", "policies", "amenities", etc.
+  keyName          String   @unique
+  question         String?  // Direct question for Q&A pairs
+  answer           String?  // Direct answer for Q&A pairs
+  content          String   // JSON content for complex knowledge
+  confidence       Float    @default(0.9)  // Renamed from confidenceScore for consistency
+  learnedFromChats String   @default("[]") // JSON array of chat session IDs
+  successRate      Float    @default(0.0)
+  useCount         Int      @default(0)
+  lastUsed         DateTime?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  
+  patterns         KnowledgePattern[]
+}
+
+model KnowledgePattern {
+  id              String   @id @default(cuid())
+  knowledgeId     String
+  pattern         String   // Regex or text pattern
+  patternType     String   // "exact", "regex", "semantic"
+  confidence      Float    @default(0.5)
+  hitCount        Int      @default(0)
+  lastMatched     DateTime?
+  
+  knowledge       LearnedKnowledge @relation(fields: [knowledgeId], references: [id], onDelete: Cascade)
+  
+  @@index([pattern])
+}
+
+model AdminNotification {
+  id              String   @id @default(cuid())
+  chatSessionId   String
+  title           String
+  message         String
+  urgency         String   // "low", "medium", "high"
+  isRead          Boolean  @default(false)
+  readAt          DateTime?
+  respondedAt     DateTime?
+  adminUserId     String?
+  createdAt       DateTime @default(now())
+  
+  @@index([isRead, urgency])
+}
+
+model RoomCategory {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  nameEn      String   // English name
+  nameDe      String   // German name
+  order       Int      @default(0)
+  isDefault   Boolean  @default(false) // Predefined categories
+  isActive    Boolean  @default(true)
+  icon        String?  // Optional icon for UI
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  images      ApartmentImage[]
+  
+  @@index([order])
+}
