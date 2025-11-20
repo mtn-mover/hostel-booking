@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { prisma } from '@/lib/prisma'
-import { sendBookingConfirmationEmail, sendBookingCancellationEmail } from '@/lib/email'
 
 function getStripe() {
   if (!process.env.STRIPE_SECRET_KEY) {
@@ -116,6 +115,7 @@ async function handlePaymentSuccess(paymentIntent: Stripe.PaymentIntent) {
 
   // Send confirmation email to guest
   try {
+    const { sendBookingConfirmationEmail } = await import('@/lib/email')
     await sendBookingConfirmationEmail(booking)
     console.log(`Confirmation email sent for booking ${bookingId}`)
   } catch (error) {
@@ -168,6 +168,7 @@ async function handlePaymentCanceled(paymentIntent: Stripe.PaymentIntent) {
 
   // Send cancellation email to guest
   try {
+    const { sendBookingCancellationEmail } = await import('@/lib/email')
     await sendBookingCancellationEmail(booking)
     console.log(`Cancellation email sent for booking ${bookingId}`)
   } catch (error) {
