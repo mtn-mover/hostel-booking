@@ -3,6 +3,9 @@ import { ApartmentGrid } from '@/components/apartments/apartment-grid'
 import { SearchFiltersEnhanced } from '@/components/search/search-filters-enhanced'
 import { HeroSimple } from '@/components/layout/hero-simple'
 
+// Force dynamic rendering to avoid build-time database queries
+export const dynamic = 'force-dynamic'
+
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-gray-50">
