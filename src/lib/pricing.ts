@@ -11,6 +11,17 @@ interface PriceCalculation {
   source?: string
 }
 
+interface PriceBreakdown {
+  dateRange: string
+  nights: number
+  priceType: string
+  pricePerNight: number
+  subtotal: number
+  discountApplied: boolean
+  discountAmount: number
+  total: number
+}
+
 /**
  * Get the price for a specific date considering all pricing rules
  */
@@ -26,10 +37,12 @@ export async function getPriceForDate(
   const dateStr = `${year}-${month}-${day}`
   
   // Check for special event price first (highest priority)
+  // End date is exclusive (like check-out)
   const eventPrice = await prisma.eventPrice.findFirst({
     where: {
       apartmentId,
-      date: dateStr,
+      startDate: { lte: dateStr },
+      endDate: { gt: dateStr },  // Exclusive end date
       isActive: true
     }
   })
@@ -39,11 +52,12 @@ export async function getPriceForDate(
   }
 
   // Check for season prices
+  // End date is exclusive (like check-out)
   const seasonPrice = await prisma.seasonPrice.findFirst({
     where: {
       apartmentId,
       startDate: { lte: dateStr },
-      endDate: { gte: dateStr },
+      endDate: { gt: dateStr },  // Exclusive end date
       isActive: true
     },
     orderBy: {
@@ -60,6 +74,75 @@ export async function getPriceForDate(
 }
 
 /**
+ * Get detailed price information for a specific date
+ */
+async function getPriceInfoForDate(
+  apartmentId: string,
+  date: Date,
+  basePrice: number
+): Promise<{
+  price: number
+  type: 'OFFICIAL' | 'HIGH_SEASON' | 'MID_SEASON' | 'LOW_SEASON' | 'SPECIAL_EVENT'
+  source: string
+  isEvent: boolean
+}> {
+  // Format date as string for SQLite comparison
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  const dateStr = `${year}-${month}-${day}`
+  
+  // Check for special event price first (highest priority)
+  const eventPrice = await prisma.eventPrice.findFirst({
+    where: {
+      apartmentId,
+      startDate: { lte: dateStr },
+      endDate: { gt: dateStr },
+      isActive: true
+    }
+  })
+
+  if (eventPrice) {
+    return {
+      price: eventPrice.price,
+      type: 'SPECIAL_EVENT',
+      source: eventPrice.eventName,
+      isEvent: true
+    }
+  }
+
+  // Check for season prices
+  const seasonPrice = await prisma.seasonPrice.findFirst({
+    where: {
+      apartmentId,
+      startDate: { lte: dateStr },
+      endDate: { gt: dateStr },
+      isActive: true
+    },
+    orderBy: {
+      priority: 'desc'
+    }
+  })
+
+  if (seasonPrice) {
+    return {
+      price: seasonPrice.price,
+      type: seasonPrice.type as any,
+      source: seasonPrice.name,
+      isEvent: false
+    }
+  }
+
+  // Return base price if no special pricing found
+  return {
+    price: basePrice,
+    type: 'OFFICIAL',
+    source: 'Standard Rate',
+    isEvent: false
+  }
+}
+
+/**
  * Calculate total price for a date range with discounts
  */
 export async function calculateTotalPrice(
@@ -70,6 +153,7 @@ export async function calculateTotalPrice(
 ): Promise<{
   nights: number
   pricePerNight: number[]
+  priceBreakdown: PriceBreakdown[]
   subtotal: number
   discountPercentage: number
   discountAmount: number
@@ -82,15 +166,27 @@ export async function calculateTotalPrice(
     (checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24)
   )
 
-  // Get price for each night
+  // Get price info for each night
   const pricePerNight: number[] = []
-  let subtotal = 0
+  const dailyPriceInfo: Array<{
+    date: Date
+    price: number
+    type: string
+    source: string
+    isEvent: boolean
+  }> = []
 
   const currentDate = new Date(checkIn)
   while (currentDate < checkOut) {
-    const dayPrice = await getPriceForDate(apartmentId, currentDate, basePrice)
-    pricePerNight.push(dayPrice)
-    subtotal += dayPrice
+    const priceInfo = await getPriceInfoForDate(apartmentId, currentDate, basePrice)
+    pricePerNight.push(priceInfo.price)
+    dailyPriceInfo.push({
+      date: new Date(currentDate),
+      price: priceInfo.price,
+      type: priceInfo.type,
+      source: priceInfo.source,
+      isEvent: priceInfo.isEvent
+    })
     currentDate.setDate(currentDate.getDate() + 1)
   }
 
@@ -102,12 +198,68 @@ export async function calculateTotalPrice(
       isActive: true
     },
     orderBy: {
-      minNights: 'desc' // Get the highest applicable discount
+      minNights: 'desc'
     }
   })
 
   const discountPercentage = discountRule?.percentage || 0
-  const discountAmount = (subtotal * discountPercentage) / 100
+
+  // Group consecutive dates with same price type
+  const priceBreakdown: PriceBreakdown[] = []
+  let currentGroup: typeof dailyPriceInfo[0][] = []
+  
+  for (let i = 0; i < dailyPriceInfo.length; i++) {
+    const current = dailyPriceInfo[i]
+    
+    if (currentGroup.length === 0 || 
+        (currentGroup[0].type === current.type && 
+         currentGroup[0].source === current.source)) {
+      currentGroup.push(current)
+    } else {
+      // Process the completed group
+      if (currentGroup.length > 0) {
+        const groupSubtotal = currentGroup.reduce((sum, d) => sum + d.price, 0)
+        const isEventGroup = currentGroup[0].isEvent
+        const groupDiscount = isEventGroup ? 0 : (groupSubtotal * discountPercentage) / 100
+        
+        priceBreakdown.push({
+          dateRange: formatDateRange(currentGroup[0].date, currentGroup[currentGroup.length - 1].date),
+          nights: currentGroup.length,
+          priceType: currentGroup[0].source,
+          pricePerNight: currentGroup[0].price,
+          subtotal: groupSubtotal,
+          discountApplied: !isEventGroup && discountPercentage > 0,
+          discountAmount: groupDiscount,
+          total: groupSubtotal - groupDiscount
+        })
+      }
+      
+      // Start new group
+      currentGroup = [current]
+    }
+  }
+  
+  // Process the last group
+  if (currentGroup.length > 0) {
+    const groupSubtotal = currentGroup.reduce((sum, d) => sum + d.price, 0)
+    const isEventGroup = currentGroup[0].isEvent
+    const groupDiscount = isEventGroup ? 0 : (groupSubtotal * discountPercentage) / 100
+    
+    priceBreakdown.push({
+      dateRange: formatDateRange(currentGroup[0].date, currentGroup[currentGroup.length - 1].date),
+      nights: currentGroup.length,
+      priceType: currentGroup[0].source,
+      pricePerNight: currentGroup[0].price,
+      subtotal: groupSubtotal,
+      discountApplied: !isEventGroup && discountPercentage > 0,
+      discountAmount: groupDiscount,
+      total: groupSubtotal - groupDiscount
+    })
+  }
+
+  // Calculate totals
+  const subtotal = priceBreakdown.reduce((sum, pb) => sum + pb.subtotal, 0)
+  const totalDiscountAmount = priceBreakdown.reduce((sum, pb) => sum + pb.discountAmount, 0)
 
   // Get apartment for fees
   const apartment = await prisma.apartment.findUnique({
@@ -116,20 +268,36 @@ export async function calculateTotalPrice(
   })
 
   const cleaningFee = apartment?.cleaningFee || 50
-  const serviceFee = (subtotal - discountAmount) * 0.15 // 15% service fee
+  const serviceFee = (subtotal - totalDiscountAmount) * 0.15 // 15% service fee
 
-  const total = subtotal - discountAmount + cleaningFee + serviceFee
+  const total = subtotal - totalDiscountAmount + cleaningFee + serviceFee
 
   return {
     nights,
     pricePerNight,
+    priceBreakdown,
     subtotal,
     discountPercentage,
-    discountAmount,
+    discountAmount: totalDiscountAmount,
     cleaningFee,
     serviceFee,
     total
   }
+}
+
+/**
+ * Format date range for display
+ */
+function formatDateRange(startDate: Date, endDate: Date): string {
+  const options: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short' }
+  const start = startDate.toLocaleDateString('de-DE', options)
+  const end = endDate.toLocaleDateString('de-DE', options)
+  
+  if (start === end) {
+    return start
+  }
+  
+  return `${start} - ${end}`
 }
 
 /**
@@ -176,10 +344,12 @@ export async function getPricingCalendar(
       where: {
         apartmentId,
         isActive: true,
-        date: {
-          gte: startDateStr,
-          lte: endDateStr
-        }
+        OR: [
+          {
+            startDate: { lte: endDateStr },
+            endDate: { gt: startDateStr }  // Exclusive end date
+          }
+        ]
       }
     }),
     prisma.discountRule.findMany({
@@ -201,9 +371,9 @@ export async function getPricingCalendar(
     const dateKey = `${currentYear}-${currentMonth}-${currentDay}`
     
     // Check for event price (highest priority)
+    // End date is exclusive
     const eventPrice = eventPrices.find(ep => {
-      // Compare date strings directly
-      return ep.date === dateKey
+      return dateKey >= ep.startDate && dateKey < ep.endDate
     })
 
     if (eventPrice) {
@@ -218,9 +388,10 @@ export async function getPricingCalendar(
       })
     } else {
       // Check for season price
+      // End date is exclusive
       const seasonPrice = seasonPrices.find(sp => {
         // Compare as strings for SQLite compatibility
-        return dateKey >= sp.startDate && dateKey <= sp.endDate
+        return dateKey >= sp.startDate && dateKey < sp.endDate
       })
 
       if (seasonPrice) {

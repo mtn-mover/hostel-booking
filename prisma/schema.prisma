@@ -237,16 +237,17 @@ model EventPrice {
   id          String   @id @default(cuid())
   apartmentId String
   eventName   String   // e.g., "Christmas", "New Year", "Jazz Festival"
-  date        String   // Event date in YYYY-MM-DD format
-  price       Float    // Price for this specific date
+  startDate   String   // Event start date in YYYY-MM-DD format
+  endDate     String   // Event end date in YYYY-MM-DD format
+  price       Float    // Price for this event period
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   apartment Apartment @relation(fields: [apartmentId], references: [id], onDelete: Cascade)
   
-  @@unique([apartmentId, date])
-  @@index([apartmentId, date])
+  @@unique([apartmentId, eventName, startDate])
+  @@index([apartmentId, startDate, endDate])
 }
 
 // Discount Rules based on number of nights

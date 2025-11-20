@@ -1,6 +1,6 @@
 import { Suspense } from 'react'
 import { ApartmentGrid } from '@/components/apartments/apartment-grid'
-import { SearchFilters } from '@/components/search/search-filters'
+import { SearchFiltersEnhanced } from '@/components/search/search-filters-enhanced'
 import { HeroSimple } from '@/components/layout/hero-simple'
 
 export default function HomePage() {
@@ -14,10 +14,10 @@ export default function HomePage() {
             Find Your Perfect Stay
           </h1>
           <p className="text-lg text-gray-600 mb-6">
-            Discover comfortable apartments in the heart of the city
+            Discover comfortable apartments in the heart of Switzerland
           </p>
           
-          <SearchFilters />
+          <SearchFiltersEnhanced />
         </div>
 
         <Suspense fallback={<div className="text-center py-8">Loading apartments...</div>}>

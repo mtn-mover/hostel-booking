@@ -21,7 +21,8 @@ interface SeasonPrice {
 interface EventPrice {
   id?: string
   eventName: string
-  date: string
+  startDate: string
+  endDate: string
   price: number
   isActive: boolean
 }
@@ -335,9 +336,11 @@ export function PricingManager({ apartmentId, basePrice }: Props) {
 
   // Add new event price
   const addEventPrice = () => {
+    const today = new Date().toISOString().split('T')[0]
     const newEvent: EventPrice = {
       eventName: '',
-      date: getNextAvailableDateForEvent(),
+      startDate: today,
+      endDate: today,
       price: basePrice * 1.5,
       isActive: true
     }
@@ -943,7 +946,7 @@ export function PricingManager({ apartmentId, basePrice }: Props) {
 
           {eventPrices.map((event, index) => (
             <div key={event.id || index} className="border rounded-lg p-4 space-y-3">
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">
                     Event Name
@@ -963,40 +966,6 @@ export function PricingManager({ apartmentId, basePrice }: Props) {
                 
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">
-                    Date
-                  </label>
-                  <input
-                    type="date"
-                    value={event.date}
-                    onChange={(e) => {
-                      const updated = [...eventPrices]
-                      updated[index].date = e.target.value
-                      setEventPrices(updated)
-                    }}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                  />
-                  {/* Show if this date overrides a season */}
-                  {event.date && (() => {
-                    const checkDate = new Date(event.date)
-                    const overriddenSeason = seasonPrices.find(season => {
-                      if (!season.startDate || !season.endDate) return false
-                      const start = new Date(season.startDate)
-                      const end = new Date(season.endDate)
-                      return checkDate >= start && checkDate <= end
-                    })
-                    if (overriddenSeason) {
-                      return (
-                        <p className="text-orange-600 text-xs mt-1">
-                          ⚠️ Overrides: {overriddenSeason.name || 'Season'} (CHF {overriddenSeason.price})
-                        </p>
-                      )
-                    }
-                    return null
-                  })()}
-                </div>
-                
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">
                     Price (CHF)
                   </label>
                   <input
@@ -1011,6 +980,72 @@ export function PricingManager({ apartmentId, basePrice }: Props) {
                     step="0.01"
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
                   />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                    Start Date
+                  </label>
+                  <input
+                    type="date"
+                    value={event.startDate}
+                    onChange={(e) => {
+                      const updated = [...eventPrices]
+                      updated[index].startDate = e.target.value
+                      // Auto-set end date to same as start if empty
+                      if (!updated[index].endDate) {
+                        updated[index].endDate = e.target.value
+                      }
+                      setEventPrices(updated)
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                    End Date
+                  </label>
+                  <input
+                    type="date"
+                    value={event.endDate}
+                    onChange={(e) => {
+                      const updated = [...eventPrices]
+                      updated[index].endDate = e.target.value
+                      setEventPrices(updated)
+                    }}
+                    min={event.startDate}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                  />
+                  {/* Show if dates override seasons */}
+                  {event.startDate && event.endDate && (() => {
+                    const overriddenSeasons = new Set<string>()
+                    const start = new Date(event.startDate)
+                    const end = new Date(event.endDate)
+                    
+                    seasonPrices.forEach(season => {
+                      if (!season.startDate || !season.endDate) return
+                      const seasonStart = new Date(season.startDate)
+                      const seasonEnd = new Date(season.endDate)
+                      
+                      // Check if event overlaps with season (end dates are exclusive)
+                      // Event overlaps if: eventStart < seasonEnd AND eventEnd > seasonStart
+                      if (start < seasonEnd && end > seasonStart) {
+                        overriddenSeasons.add(`${season.name} (CHF ${season.price})`)
+                      }
+                    })
+                    
+                    if (overriddenSeasons.size > 0) {
+                      return (
+                        <p className="text-orange-600 text-xs mt-1">
+                          ⚠️ Overrides: {Array.from(overriddenSeasons).join(', ')}
+                        </p>
+                      )
+                    }
+                    return null
+                  })()}
                 </div>
               </div>
 

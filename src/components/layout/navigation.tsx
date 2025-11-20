@@ -96,14 +96,14 @@ export function Navigation() {
                 )}
               </div>
             ) : (
-              <>
-                <Link href="/auth/signup" className="text-gray-600 hover:text-gray-900 font-medium">
+              <div className="flex items-center space-x-3">
+                <Link href="/auth/signup" className="px-4 py-2 text-gray-700 hover:text-gray-900 font-medium border border-gray-300 rounded-lg hover:bg-gray-50 transition">
                   Sign Up
                 </Link>
-                <Link href="/auth/signin" className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition font-medium">
+                <Link href="/auth/signin" className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium">
                   Sign In
                 </Link>
-              </>
+              </div>
             )}
           </div>
         </div>

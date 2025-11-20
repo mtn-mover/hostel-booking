@@ -158,15 +158,17 @@ export default async function ApartmentDetailPage({ params }: ApartmentDetailPro
     let calculatedPrice = apartment.price
     
     // Check for event price first (highest priority)
+    // End date is EXCLUSIVE (like checkout date)
     const eventPrice = eventPrices.find(ep => 
-      dateStr >= ep.startDate && dateStr <= ep.endDate
+      dateStr >= ep.startDate && dateStr < ep.endDate
     )
     if (eventPrice) {
       calculatedPrice = eventPrice.price
     } else {
       // Check for season price
+      // End date is EXCLUSIVE (like checkout date)
       const seasonPrice = seasonPrices.find(sp => 
-        dateStr >= sp.startDate && dateStr <= sp.endDate
+        dateStr >= sp.startDate && dateStr < sp.endDate
       )
       if (seasonPrice) {
         calculatedPrice = seasonPrice.price
@@ -192,6 +194,21 @@ export default async function ApartmentDetailPage({ params }: ApartmentDetailPro
   const averageRating = apartment.reviews.length > 0 
     ? apartment.reviews.reduce((sum, review) => sum + review.rating, 0) / apartment.reviews.length
     : null
+
+  // Get current price for today
+  const currentPrice = await getPriceForDate(apartment.id, today, apartment.price)
+  
+  // Find which season/event applies today
+  const todayDateStr = todayStr
+  const currentEvent = eventPrices.find(ep => 
+    todayDateStr >= ep.startDate && todayDateStr < ep.endDate  // End date is EXCLUSIVE
+  )
+  const currentSeason = !currentEvent ? seasonPrices.find(sp => 
+    todayDateStr >= sp.startDate && todayDateStr < sp.endDate  // End date is EXCLUSIVE
+  ) : null
+  
+  const hasSeasonalPrice = currentPrice !== apartment.price
+  const seasonName = currentEvent?.eventName || currentSeason?.name || null
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -319,11 +336,29 @@ export default async function ApartmentDetailPage({ params }: ApartmentDetailPro
               <div className="bg-white rounded-lg shadow-lg p-6">
                 <div className="mb-4">
                   <div className="flex items-baseline justify-between">
-                    <span className="text-3xl font-bold">
-                      {formatPrice(apartment.price)}
-                    </span>
+                    <div>
+                      {hasSeasonalPrice ? (
+                        <>
+                          <span className="text-3xl font-bold text-gray-900">
+                            {formatPrice(currentPrice)}
+                          </span>
+                          <span className="text-lg text-gray-500 line-through ml-2">
+                            {formatPrice(apartment.price)}
+                          </span>
+                        </>
+                      ) : (
+                        <span className="text-3xl font-bold">
+                          {formatPrice(apartment.price)}
+                        </span>
+                      )}
+                    </div>
                     <span className="text-gray-600">/ night</span>
                   </div>
+                  {seasonName && (
+                    <p className="text-sm text-blue-600 font-medium mt-1">
+                      {seasonName} pricing
+                    </p>
+                  )}
                   {apartment.cleaningFee > 0 && (
                     <p className="text-sm text-gray-600 mt-1">
                       + {formatPrice(apartment.cleaningFee)} cleaning fee

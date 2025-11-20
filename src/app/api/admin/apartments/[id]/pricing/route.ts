@@ -31,7 +31,7 @@ export async function GET(
       }),
       prisma.eventPrice.findMany({
         where: { apartmentId },
-        orderBy: { date: 'asc' }
+        orderBy: { startDate: 'asc' }
       }),
       prisma.discountRule.findMany({
         where: { apartmentId },
@@ -108,7 +108,8 @@ export async function POST(
               data: body.eventPrices.map((event: any) => ({
                 apartmentId,
                 eventName: event.eventName,
-                date: event.date, // Already a string in YYYY-MM-DD format
+                startDate: event.startDate, // Already a string in YYYY-MM-DD format
+                endDate: event.endDate,     // Already a string in YYYY-MM-DD format
                 price: event.price,
                 isActive: event.isActive
               }))
@@ -166,7 +167,8 @@ export async function POST(
           data: eventPrices.map((event: any) => ({
             apartmentId,
             eventName: event.eventName,
-            date: event.date, // Already a string in YYYY-MM-DD format
+            startDate: event.startDate, // Already a string in YYYY-MM-DD format
+            endDate: event.endDate,     // Already a string in YYYY-MM-DD format
             price: event.price,
             isActive: event.isActive
           }))

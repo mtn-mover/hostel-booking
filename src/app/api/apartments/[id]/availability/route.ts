@@ -60,16 +60,24 @@ export async function GET(
       }
     })
 
-    // Get active pricing rules for this apartment
-    const pricingRules = await prisma.pricingRule.findMany({
-      where: {
-        apartmentId: id,
-        isActive: true
-      },
-      orderBy: {
-        priority: 'desc'
-      }
-    })
+    // Get active seasonal and event prices for this apartment
+    const [seasonPrices, eventPrices] = await Promise.all([
+      prisma.seasonPrice.findMany({
+        where: {
+          apartmentId: id,
+          isActive: true
+        },
+        orderBy: {
+          priority: 'desc'
+        }
+      }),
+      prisma.eventPrice.findMany({
+        where: {
+          apartmentId: id,
+          isActive: true
+        }
+      })
+    ])
 
     // Get existing bookings for the date range
     const bookings = await prisma.booking.findMany({
@@ -105,28 +113,28 @@ export async function GET(
       reason?: string
     }>()
 
-    // Helper function to apply pricing rules to a date
+    // Helper function to get price for a specific date
     const calculatePriceForDate = (date: Date, basePrice: number): number => {
-      let price = basePrice
+      const dateString = date.toISOString().split('T')[0]
       
-      // Apply pricing rules in priority order
-      for (const rule of pricingRules) {
-        // Check if date falls within rule's date range
-        if (rule.startDate && rule.endDate) {
-          if (date >= rule.startDate && date <= rule.endDate) {
-            price = basePrice * rule.priceModifier
-            break // Use highest priority matching rule
-          }
-        }
-        
-        // Check day of week rules
-        if (rule.dayOfWeek !== null && date.getDay() === rule.dayOfWeek) {
-          price = basePrice * rule.priceModifier
-          break
+      // First check for event prices (highest priority)
+      // End date is exclusive (like check-out date)
+      for (const event of eventPrices) {
+        if (dateString >= event.startDate && dateString < event.endDate) {
+          return Math.round(event.price)
         }
       }
       
-      return Math.round(price)
+      // Then check for seasonal prices
+      // End date is exclusive (like check-out date)
+      for (const season of seasonPrices) {
+        if (dateString >= season.startDate && dateString < season.endDate) {
+          return Math.round(season.price)
+        }
+      }
+      
+      // Default to base price
+      return Math.round(basePrice)
     }
 
     // Fill in all dates in the range with default availability
