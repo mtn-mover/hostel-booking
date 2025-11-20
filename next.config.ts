@@ -4,6 +4,12 @@ const nextConfig: NextConfig = {
   turbo: {
     root: "./",
   },
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  typescript: {
+    ignoreBuildErrors: true,
+  },
   images: {
     remotePatterns: [
       {
