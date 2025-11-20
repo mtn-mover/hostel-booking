@@ -3,15 +3,25 @@ import Stripe from 'stripe'
 import { prisma } from '@/lib/prisma'
 import { sendBookingConfirmationEmail, sendBookingCancellationEmail } from '@/lib/email'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-12-18.acacia'
-})
-
-const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET!
+function getStripe() {
+  if (!process.env.STRIPE_SECRET_KEY) {
+    throw new Error('STRIPE_SECRET_KEY is not defined')
+  }
+  return new Stripe(process.env.STRIPE_SECRET_KEY, {
+    apiVersion: '2024-12-18.acacia'
+  })
+}
 
 export async function POST(request: NextRequest) {
   const body = await request.text()
   const sig = request.headers.get('stripe-signature')!
+
+  const stripe = getStripe()
+  const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET
+
+  if (!endpointSecret) {
+    return NextResponse.json({ error: 'Webhook secret not configured' }, { status: 500 })
+  }
 
   let event: Stripe.Event
 
