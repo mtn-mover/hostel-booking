@@ -1,6 +1,8 @@
 import { Suspense } from 'react'
 import { ApartmentComparison } from '@/components/apartments/apartment-comparison'
 
+export const dynamic = 'force-dynamic'
+
 export default function ComparePage() {
   return (
     <div className="min-h-screen bg-gray-50">
