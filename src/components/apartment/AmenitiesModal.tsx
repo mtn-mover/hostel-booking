@@ -8,13 +8,15 @@ interface AmenitiesModalProps {
   onClose: () => void
   groupedAmenities: Record<string, string[]>
   getIcon: (amenity: string) => LucideIcon
+  isNotAvailable?: (amenity: string) => boolean
 }
 
 export function AmenitiesModal({
   isOpen,
   onClose,
   groupedAmenities,
-  getIcon
+  getIcon,
+  isNotAvailable = () => false
 }: AmenitiesModalProps) {
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (e.key === 'Escape') {
@@ -35,20 +37,22 @@ export function AmenitiesModal({
 
   if (!isOpen) return null
 
-  const totalAmenities = Object.values(groupedAmenities).flat().length
-
-  // Sort categories to show most important first
+  // Sort categories to show most important first (matching Airbnb order)
   const categoryOrder = [
+    'Scenic Views',
     'Bathroom',
     'Bedroom & Laundry',
-    'Kitchen',
     'Entertainment',
-    'Heating & Cooling',
-    'Outdoor',
-    'Parking',
-    'Safety',
-    'Services',
     'Family',
+    'Heating & Cooling',
+    'Home Safety',
+    'Internet & Office',
+    'Kitchen & Dining',
+    'Location Features',
+    'Outdoor',
+    'Parking & Access',
+    'Services',
+    'Not Included',
     'Other'
   ]
 
@@ -72,7 +76,7 @@ export function AmenitiesModal({
       {/* Modal */}
       <div className="relative bg-white rounded-xl w-full max-w-2xl max-h-[90vh] overflow-hidden shadow-xl mx-4">
         {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10">
           <button
             onClick={onClose}
             className="p-2 -ml-2 hover:bg-gray-100 rounded-full transition-colors"
@@ -92,21 +96,26 @@ export function AmenitiesModal({
             const amenities = groupedAmenities[category]
             if (!amenities || amenities.length === 0) return null
 
+            const isNotIncludedCategory = category === 'Not Included'
+
             return (
               <div key={category} className="mb-8 last:mb-4">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                <h3 className={`text-lg font-semibold mb-4 ${isNotIncludedCategory ? 'text-gray-500' : 'text-gray-900'}`}>
                   {category}
                 </h3>
                 <div className="space-y-4">
                   {amenities.map((amenity, index) => {
                     const Icon = getIcon(amenity)
+                    const notAvailable = isNotAvailable(amenity) || isNotIncludedCategory
                     return (
                       <div
                         key={index}
-                        className="flex items-center gap-4 pb-4 border-b border-gray-100 last:border-0 last:pb-0"
+                        className={`flex items-center gap-4 pb-4 border-b border-gray-100 last:border-0 last:pb-0 ${notAvailable ? 'opacity-60' : ''}`}
                       >
-                        <Icon className="w-6 h-6 text-gray-700 flex-shrink-0" />
-                        <span className="text-gray-700">{amenity}</span>
+                        <Icon className={`w-6 h-6 flex-shrink-0 ${notAvailable ? 'text-gray-400' : 'text-gray-700'}`} />
+                        <span className={notAvailable ? 'text-gray-400 line-through' : 'text-gray-700'}>
+                          {amenity}
+                        </span>
                       </div>
                     )
                   })}
