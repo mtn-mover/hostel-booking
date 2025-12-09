@@ -161,7 +161,57 @@ export async function POST() {
   }
 }
 
-export async function GET() {
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url)
+  const seed = searchParams.get('seed')
+
+  // If ?seed=true, run the seeding
+  if (seed === 'true') {
+    try {
+      let created = 0
+      let updated = 0
+
+      for (const amenity of amenitiesData) {
+        const existing = await prisma.amenity.findUnique({
+          where: { name: amenity.name }
+        })
+
+        if (existing) {
+          await prisma.amenity.update({
+            where: { name: amenity.name },
+            data: {
+              category: amenity.category,
+              icon: amenity.icon,
+            }
+          })
+          updated++
+        } else {
+          await prisma.amenity.create({
+            data: {
+              name: amenity.name,
+              category: amenity.category,
+              icon: amenity.icon,
+            }
+          })
+          created++
+        }
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: `Seeded amenities: ${created} created, ${updated} updated`,
+        total: amenitiesData.length
+      })
+    } catch (error) {
+      console.error('Error seeding amenities:', error)
+      return NextResponse.json(
+        { error: 'Failed to seed amenities', details: String(error) },
+        { status: 500 }
+      )
+    }
+  }
+
+  // Default: just list existing amenities
   try {
     const amenities = await prisma.amenity.findMany({
       orderBy: [
@@ -172,7 +222,8 @@ export async function GET() {
 
     return NextResponse.json({
       count: amenities.length,
-      amenities
+      amenities,
+      hint: 'Add ?seed=true to seed amenities'
     })
   } catch (error) {
     console.error('Error fetching amenities:', error)
