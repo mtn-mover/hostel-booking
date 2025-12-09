@@ -45,6 +45,7 @@ export function ApartmentEditFormTabbed({
     mainImage: apartment.mainImage || '',
     selectedAmenities: apartment.apartmentAmenities?.map((aa: any) => aa.amenity.id) || [],
     airbnbListingId: apartment.airbnbListingId || '',
+    airbnbUrl: apartment.airbnbUrl || '',
     airbnbSyncEnabled: apartment.airbnbSyncEnabled || false
   })
 
@@ -543,49 +544,70 @@ export function ApartmentEditFormTabbed({
           <div className="space-y-6">
             <div>
               <h3 className="text-lg font-medium text-gray-900 mb-4">Airbnb Integration</h3>
-              
+
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Airbnb Listing ID
+                    Airbnb URL (Link zur Buchungsseite)
                   </label>
                   <input
-                    type="text"
-                    value={formData.airbnbListingId}
-                    onChange={(e) => handleInputChange('airbnbListingId', e.target.value)}
+                    type="url"
+                    value={formData.airbnbUrl}
+                    onChange={(e) => handleInputChange('airbnbUrl', e.target.value)}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="z.B. 123456789"
+                    placeholder="https://www.airbnb.com/rooms/123456789"
                   />
+                  <p className="mt-1 text-sm text-gray-500">
+                    Diese URL wird Gästen angezeigt, um direkt auf Airbnb zu buchen.
+                  </p>
                 </div>
 
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id="airbnbSync"
-                    checked={formData.airbnbSyncEnabled}
-                    onChange={(e) => handleInputChange('airbnbSyncEnabled', e.target.checked)}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                  />
-                  <label htmlFor="airbnbSync" className="ml-2 block text-sm text-gray-900">
-                    Automatische Synchronisation aktivieren
-                  </label>
-                </div>
-
-                {formData.airbnbListingId && (
-                  <div className="bg-blue-50 rounded-lg p-4">
-                    <p className="text-sm text-blue-700">
-                      Airbnb URL: 
+                {formData.airbnbUrl && (
+                  <div className="bg-green-50 rounded-lg p-4">
+                    <p className="text-sm text-green-700 flex items-center">
+                      <span className="mr-2">✓</span>
+                      Airbnb-Link konfiguriert:
                       <a
-                        href={`https://www.airbnb.com/rooms/${formData.airbnbListingId}`}
+                        href={formData.airbnbUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="ml-2 underline"
+                        className="ml-2 underline font-medium"
                       >
                         Listing ansehen →
                       </a>
                     </p>
                   </div>
                 )}
+
+                <div className="border-t border-gray-200 pt-4 mt-4">
+                  <h4 className="text-sm font-medium text-gray-700 mb-3">Erweiterte Einstellungen</h4>
+
+                  <div className="mb-3">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Airbnb Listing ID (optional)
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.airbnbListingId}
+                      onChange={(e) => handleInputChange('airbnbListingId', e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="z.B. 123456789"
+                    />
+                  </div>
+
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id="airbnbSync"
+                      checked={formData.airbnbSyncEnabled}
+                      onChange={(e) => handleInputChange('airbnbSyncEnabled', e.target.checked)}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    />
+                    <label htmlFor="airbnbSync" className="ml-2 block text-sm text-gray-900">
+                      Automatische Synchronisation aktivieren
+                    </label>
+                  </div>
+                </div>
               </div>
             </div>
 

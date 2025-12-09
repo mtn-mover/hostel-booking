@@ -2,13 +2,9 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { prisma } from '@/lib/prisma'
 import { RoomCollageGallery } from '@/components/apartments/room-collage-gallery'
-import { BookingForm } from '@/components/booking/booking-form'
 import { AmenityList } from '@/components/apartments/amenity-list'
 import { ReviewSection } from '@/components/reviews/review-section'
-import { PricingTable } from '@/components/booking/pricing-table'
 import { HelpSection } from '@/components/apartments/help-section'
-import { formatPrice } from '@/lib/utils'
-import { getPriceForDate } from '@/lib/pricing'
 
 interface ApartmentDetailProps {
   params: Promise<{ id: string }>
@@ -16,7 +12,7 @@ interface ApartmentDetailProps {
 
 export default async function ApartmentDetailPage({ params }: ApartmentDetailProps) {
   const { id } = await params
-  
+
   // Fetch apartment with images and room categories
   const [apartment, roomCategories] = await Promise.all([
     prisma.apartment.findUnique({
@@ -45,17 +41,6 @@ export default async function ApartmentDetailPage({ params }: ApartmentDetailPro
           orderBy: {
             createdAt: 'desc'
           }
-        },
-        availabilities: {
-          where: {
-            date: {
-              gte: new Date()
-            }
-          },
-          orderBy: {
-            date: 'asc'
-          },
-          take: 730 // Show availability for up to 2 years
         }
       }
     }),
@@ -69,146 +54,14 @@ export default async function ApartmentDetailPage({ params }: ApartmentDetailPro
     notFound()
   }
 
-  // Debug: Log the booking horizon
-  console.log('Apartment booking horizon:', apartment.bookingHorizon)
-
   // Parse JSON fields for legacy data
-  const legacyImages = JSON.parse(apartment.images || '[]')
   const amenities = apartment.apartmentAmenities.length > 0
     ? apartment.apartmentAmenities.map(aa => aa.amenity.name)
     : JSON.parse(apartment.amenities || '[]')
 
-  // Use apartment images if available, otherwise use legacy images
-  const displayImages = apartment.apartmentImages.length > 0 
-    ? apartment.apartmentImages.map(img => img.url)
-    : legacyImages
-  
-  // Generate availability data until end of booking horizon
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  
-  // Use apartment's booking horizon or default to end of 2026
-  const bookingHorizonDate = apartment.bookingHorizon 
-    ? new Date(apartment.bookingHorizon) 
-    : new Date('2026-12-31')
-  bookingHorizonDate.setHours(23, 59, 59, 999)
-  
-  // Calculate number of days to show
-  const daysToShow = Math.min(
-    Math.ceil((bookingHorizonDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)),
-    730 // Maximum 2 years (730 days) for performance
-  )
-  
-  const endDate = new Date(today)
-  endDate.setDate(endDate.getDate() + daysToShow)
-  
-  // Format dates as strings for SQLite - use local dates
-  const todayYear = today.getFullYear()
-  const todayMonth = String(today.getMonth() + 1).padStart(2, '0')
-  const todayDay = String(today.getDate()).padStart(2, '0')
-  const todayStr = `${todayYear}-${todayMonth}-${todayDay}`
-  
-  const endYear = endDate.getFullYear()
-  const endMonth = String(endDate.getMonth() + 1).padStart(2, '0')
-  const endDay = String(endDate.getDate()).padStart(2, '0')
-  const endDateStr = `${endYear}-${endMonth}-${endDay}`
-  
-  // Fetch all season prices that might apply
-  const [seasonPrices, eventPrices] = await Promise.all([
-    prisma.seasonPrice.findMany({
-      where: {
-        apartmentId: apartment.id,
-        isActive: true,
-        endDate: { gte: todayStr }  // Season ends after today
-      },
-      orderBy: { priority: 'desc' }
-    }),
-    prisma.eventPrice.findMany({
-      where: {
-        apartmentId: apartment.id,
-        isActive: true,
-        AND: [
-          { startDate: { lte: endDateStr } },
-          { endDate: { gte: todayStr } }
-        ]
-      }
-    })
-  ])
-  
-  const availabilitiesWithPrices = []
-  
-  for (let i = 0; i < daysToShow; i++) {
-    const currentDate = new Date(today)
-    currentDate.setDate(today.getDate() + i)
-    
-    // Format current date as local date string
-    const year = currentDate.getFullYear()
-    const month = String(currentDate.getMonth() + 1).padStart(2, '0')
-    const day = String(currentDate.getDate()).padStart(2, '0')
-    const dateStr = `${year}-${month}-${day}`
-    
-    // Check if we have an existing availability record for this date
-    const existingAvailability = apartment.availabilities.find(a => {
-      const aDate = new Date(a.date)
-      aDate.setHours(0, 0, 0, 0)
-      return aDate.getTime() === currentDate.getTime()
-    })
-    
-    // Calculate price based on seasons and events
-    let calculatedPrice = apartment.price
-    
-    // Check for event price first (highest priority)
-    // End date is EXCLUSIVE (like checkout date)
-    const eventPrice = eventPrices.find(ep => 
-      dateStr >= ep.startDate && dateStr < ep.endDate
-    )
-    if (eventPrice) {
-      calculatedPrice = eventPrice.price
-    } else {
-      // Check for season price
-      // End date is EXCLUSIVE (like checkout date)
-      const seasonPrice = seasonPrices.find(sp => 
-        dateStr >= sp.startDate && dateStr < sp.endDate
-      )
-      if (seasonPrice) {
-        calculatedPrice = seasonPrice.price
-      }
-    }
-    
-    if (existingAvailability) {
-      // Use existing availability with calculated price
-      availabilitiesWithPrices.push({
-        ...existingAvailability,
-        priceOverride: existingAvailability.priceOverride || calculatedPrice
-      })
-    } else {
-      // Create a new availability entry with calculated price
-      availabilitiesWithPrices.push({
-        date: currentDate,
-        status: 'AVAILABLE',
-        priceOverride: calculatedPrice
-      })
-    }
-  }
-
-  const averageRating = apartment.reviews.length > 0 
+  const averageRating = apartment.reviews.length > 0
     ? apartment.reviews.reduce((sum, review) => sum + review.rating, 0) / apartment.reviews.length
     : null
-
-  // Get current price for today
-  const currentPrice = await getPriceForDate(apartment.id, today, apartment.price)
-  
-  // Find which season/event applies today
-  const todayDateStr = todayStr
-  const currentEvent = eventPrices.find(ep => 
-    todayDateStr >= ep.startDate && todayDateStr < ep.endDate  // End date is EXCLUSIVE
-  )
-  const currentSeason = !currentEvent ? seasonPrices.find(sp => 
-    todayDateStr >= sp.startDate && todayDateStr < sp.endDate  // End date is EXCLUSIVE
-  ) : null
-  
-  const hasSeasonalPrice = currentPrice !== apartment.price
-  const seasonName = currentEvent?.eventName || currentSeason?.name || null
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -320,57 +173,63 @@ export default async function ApartmentDetailPage({ params }: ApartmentDetailPro
               </div>
             )}
 
-            {/* Pricing */}
-            <div className="bg-white rounded-lg p-6 shadow-sm">
-              <h2 className="text-2xl font-semibold mb-4">Pricing</h2>
-              <PricingTable apartment={apartment} />
-            </div>
-
             {/* Reviews */}
             <ReviewSection reviews={apartment.reviews} />
           </div>
 
-          {/* Right Column - Booking */}
+          {/* Right Column - Airbnb Booking Link */}
           <div className="lg:col-span-1">
             <div className="sticky top-4">
               <div className="bg-white rounded-lg shadow-lg p-6">
-                <div className="mb-4">
-                  <div className="flex items-baseline justify-between">
-                    <div>
-                      {hasSeasonalPrice ? (
-                        <>
-                          <span className="text-3xl font-bold text-gray-900">
-                            {formatPrice(currentPrice)}
-                          </span>
-                          <span className="text-lg text-gray-500 line-through ml-2">
-                            {formatPrice(apartment.price)}
-                          </span>
-                        </>
-                      ) : (
-                        <span className="text-3xl font-bold">
-                          {formatPrice(apartment.price)}
-                        </span>
-                      )}
-                    </div>
-                    <span className="text-gray-600">/ night</span>
-                  </div>
-                  {seasonName && (
-                    <p className="text-sm text-blue-600 font-medium mt-1">
-                      {seasonName} pricing
-                    </p>
-                  )}
-                  {apartment.cleaningFee > 0 && (
-                    <p className="text-sm text-gray-600 mt-1">
-                      + {formatPrice(apartment.cleaningFee)} cleaning fee
-                    </p>
-                  )}
-                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-4">
+                  Diese Unterkunft buchen
+                </h3>
 
-                <BookingForm 
-                  apartment={apartment}
-                  availabilities={availabilitiesWithPrices}
-                  bookingHorizon={apartment.bookingHorizon || '2026-12-31'}
-                />
+                {apartment.airbnbUrl ? (
+                  <div className="space-y-4">
+                    <p className="text-gray-600">
+                      Buchen Sie diese Unterkunft direkt bei Airbnb. Dort finden Sie aktuelle Preise und Verfuegbarkeit.
+                    </p>
+
+                    <a
+                      href={apartment.airbnbUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block w-full bg-gradient-to-r from-rose-500 to-pink-600 text-white text-center py-4 px-6 rounded-lg font-semibold text-lg hover:from-rose-600 hover:to-pink-700 transition-all shadow-md hover:shadow-lg"
+                    >
+                      Auf Airbnb buchen
+                    </a>
+
+                    <p className="text-sm text-gray-500 text-center">
+                      Sie werden zu Airbnb weitergeleitet
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <p className="text-gray-600">
+                      Diese Unterkunft ist derzeit nicht zur Online-Buchung verfuegbar.
+                    </p>
+
+                    <div className="bg-gray-100 rounded-lg p-4">
+                      <p className="text-sm text-gray-600">
+                        Bitte kontaktieren Sie uns direkt fuer Buchungsanfragen.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Location Info */}
+                <div className="mt-6 pt-6 border-t border-gray-200">
+                  <div className="flex items-start gap-3">
+                    <span className="text-2xl">📍</span>
+                    <div>
+                      <h4 className="font-medium text-gray-900">Standort</h4>
+                      <p className="text-gray-600">
+                        {apartment.city}, {apartment.country}
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {/* Help Section */}

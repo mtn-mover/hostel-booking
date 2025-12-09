@@ -1,6 +1,5 @@
 import Image from 'next/image'
 import Link from 'next/link'
-import { formatPrice } from '@/lib/utils'
 
 interface ApartmentCardProps {
   apartment: {
@@ -98,42 +97,8 @@ export function ApartmentCard({ apartment }: ApartmentCardProps) {
             </div>
           )}
 
-          {/* Price */}
-          <div className="flex justify-between items-end">
-            <div>
-              {apartment.hasSeasonalPrice && apartment.currentPrice && apartment.officialPrice ? (
-                <>
-                  {/* Season badge */}
-                  {apartment.seasonName && (
-                    <div className="mb-1">
-                      <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full font-medium">
-                        {apartment.seasonName}
-                      </span>
-                    </div>
-                  )}
-                  <div className="flex items-baseline gap-2">
-                    {/* Current seasonal price */}
-                    <span className="text-2xl font-bold text-gray-900">
-                      {formatPrice(apartment.currentPrice)}
-                    </span>
-                    {/* Crossed out official price */}
-                    <span className="text-lg text-gray-400 line-through">
-                      {formatPrice(apartment.officialPrice)}
-                    </span>
-                  </div>
-                  <span className="text-gray-500 text-sm">/ night</span>
-                </>
-              ) : (
-                <>
-                  {/* Regular price display */}
-                  <span className="text-2xl font-bold text-gray-900">
-                    {formatPrice(apartment.currentPrice || apartment.price)}
-                  </span>
-                  <span className="text-gray-500 text-sm ml-1">/ night</span>
-                </>
-              )}
-            </div>
-            
+          {/* View Details Button */}
+          <div className="flex justify-end">
             <button className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition">
               View Details
             </button>
