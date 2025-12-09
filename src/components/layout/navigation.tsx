@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useSession, signOut } from 'next-auth/react'
 import { useState } from 'react'
+import { LanguageSwitcher } from '@/components/ui/language-switcher'
 
 export function Navigation() {
   const { data: session } = useSession()
@@ -44,6 +45,9 @@ export function Navigation() {
 
           {/* Auth Section */}
           <div className="flex items-center space-x-4">
+            {/* Language Switcher */}
+            <LanguageSwitcher />
+
             {session?.user ? (
               <div className="relative">
                 <button
