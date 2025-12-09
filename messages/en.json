@@ -1,0 +1,49 @@
+{
+  "common": {
+    "backToListings": "Back to listings",
+    "viewDetails": "View Details",
+    "loading": "Loading...",
+    "location": "Location"
+  },
+  "home": {
+    "title": "Find Your Perfect Stay",
+    "subtitle": "Discover comfortable apartments in the heart of Switzerland",
+    "loadingApartments": "Loading apartments..."
+  },
+  "apartment": {
+    "aboutThisPlace": "About this place",
+    "features": "Features",
+    "amenities": "Amenities",
+    "reviews": "Reviews",
+    "bedrooms": "Bedrooms",
+    "beds": "Beds",
+    "bathrooms": "Bathrooms",
+    "private": "Private",
+    "livingSpace": "Living space",
+    "guests": "Guests",
+    "maximum": "Maximum"
+  },
+  "booking": {
+    "bookThisProperty": "Book this property",
+    "bookOnAirbnb": "Book on Airbnb",
+    "bookDirectlyOnAirbnb": "Book this property directly on Airbnb. You will find current prices and availability there.",
+    "redirectToAirbnb": "You will be redirected to Airbnb",
+    "notAvailable": "This property is currently not available for online booking.",
+    "contactUs": "Please contact us directly for booking inquiries."
+  },
+  "navigation": {
+    "home": "Home",
+    "apartments": "Apartments",
+    "about": "About",
+    "contact": "Contact",
+    "signIn": "Sign In",
+    "signUp": "Sign Up",
+    "signOut": "Sign Out",
+    "admin": "Admin"
+  },
+  "footer": {
+    "allRightsReserved": "All rights reserved",
+    "privacyPolicy": "Privacy Policy",
+    "termsOfService": "Terms of Service"
+  }
+}
