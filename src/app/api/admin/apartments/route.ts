@@ -62,6 +62,7 @@ export async function POST(request: NextRequest) {
         isActive: data.isActive ?? true,
         mainImage: data.mainImage || null,
         airbnbListingId: data.airbnbListingId || null,
+        airbnbUrl: data.airbnbUrl || null,
         airbnbSyncEnabled: data.airbnbSyncEnabled || false,
         // Legacy fields for compatibility
         images: '[]',
