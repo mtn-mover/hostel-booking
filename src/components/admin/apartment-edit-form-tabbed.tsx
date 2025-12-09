@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { formatPrice } from '@/lib/utils'
 
 interface ApartmentEditFormTabbedProps {
   apartment: any
@@ -52,7 +51,6 @@ export function ApartmentEditFormTabbed({
   const tabs = [
     { id: 'basic', label: 'Grunddaten', icon: '📝' },
     { id: 'location', label: 'Standort', icon: '📍' },
-    { id: 'pricing', label: 'Preise & Regeln', icon: '💰' },
     { id: 'amenities', label: 'Ausstattung', icon: '✨' },
     { id: 'images', label: 'Bilder', icon: '📷' },
     { id: 'integration', label: 'Integration', icon: '🔗' },
@@ -348,116 +346,6 @@ export function ApartmentEditFormTabbed({
               <p className="text-sm text-gray-600">
                 💡 Tipp: Die Koordinaten helfen bei der genauen Kartenpositionierung. 
                 Sie können diese von Google Maps kopieren.
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* Pricing Tab */}
-        {activeTab === 'pricing' && (
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Basispreis pro Nacht
-                </label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">CHF</span>
-                  <input
-                    type="number"
-                    value={formData.price}
-                    onChange={(e) => handleInputChange('price', parseFloat(e.target.value))}
-                    min="0"
-                    step="0.01"
-                    className="w-full pl-12 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Service-Gebühr (%)
-                </label>
-                <input
-                  type="number"
-                  value={formData.serviceFeePercentage}
-                  onChange={(e) => handleInputChange('serviceFeePercentage', parseFloat(e.target.value))}
-                  min="0"
-                  max="100"
-                  step="0.1"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Min. Nächte
-                </label>
-                <input
-                  type="number"
-                  value={formData.minNights}
-                  onChange={(e) => handleInputChange('minNights', parseInt(e.target.value))}
-                  min="1"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Max. Nächte
-                </label>
-                <input
-                  type="number"
-                  value={formData.maxNights}
-                  onChange={(e) => handleInputChange('maxNights', parseInt(e.target.value))}
-                  min="1"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Buchungshorizont (Tage)
-                </label>
-                <input
-                  type="number"
-                  value={formData.bookingHorizon}
-                  onChange={(e) => handleInputChange('bookingHorizon', parseInt(e.target.value))}
-                  min="1"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Check-in Zeit
-                </label>
-                <input
-                  type="time"
-                  value={formData.checkInTime}
-                  onChange={(e) => handleInputChange('checkInTime', e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Check-out Zeit
-                </label>
-                <input
-                  type="time"
-                  value={formData.checkOutTime}
-                  onChange={(e) => handleInputChange('checkOutTime', e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-            </div>
-
-            <div className="bg-blue-50 rounded-lg p-4">
-              <h4 className="font-medium text-blue-900 mb-2">Preisberechnung</h4>
-              <p className="text-sm text-blue-700">
-                Der finale Preis wird basierend auf Saison, Events und Rabatten berechnet.
-                Die Service-Gebühr wird zusätzlich zum Übernachtungspreis berechnet.
               </p>
             </div>
           </div>
