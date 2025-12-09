@@ -1,7 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { ApartmentEditForm } from '@/components/admin/apartment-edit-form'
+import { ApartmentEditFormTabbed } from '@/components/admin/apartment-edit-form-tabbed'
 
 interface Props {
   params: Promise<{
@@ -67,7 +67,7 @@ export default async function AdminApartmentEdit({ params }: Props) {
       </div>
 
       {/* Edit Form */}
-      <ApartmentEditForm 
+      <ApartmentEditFormTabbed
         apartment={apartment}
         amenities={amenities}
         roomCategories={roomCategories}
