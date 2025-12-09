@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { prisma } from '@/lib/prisma'
 import { ImageGallery } from '@/components/apartment/ImageGallery'
-import { AmenityList } from '@/components/apartments/amenity-list'
+import { AmenitiesSection } from '@/components/apartment/AmenitiesSection'
 import { ReviewSection } from '@/components/reviews/review-section'
 import { HelpSection } from '@/components/apartments/help-section'
 
@@ -148,10 +148,7 @@ export default async function ApartmentDetailPage({ params }: ApartmentDetailPro
 
             {/* Amenities */}
             {amenities.length > 0 && (
-              <div className="bg-white rounded-lg p-6 shadow-sm">
-                <h2 className="text-2xl font-semibold mb-4">Amenities</h2>
-                <AmenityList amenities={amenities} />
-              </div>
+              <AmenitiesSection amenities={amenities} />
             )}
 
             {/* Reviews */}
