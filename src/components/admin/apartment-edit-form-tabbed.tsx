@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { RoomImageManager } from './room-image-manager'
 
 interface ApartmentEditFormTabbedProps {
   apartment: any
@@ -396,34 +397,11 @@ export function ApartmentEditFormTabbed({
         {/* Images Tab */}
         {activeTab === 'images' && (
           <div className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Hauptbild URL
-              </label>
-              <input
-                type="text"
-                value={formData.mainImage}
-                onChange={(e) => handleInputChange('mainImage', e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="https://..."
-              />
-              {formData.mainImage && (
-                <div className="mt-4">
-                  <img
-                    src={formData.mainImage}
-                    alt="Hauptbild"
-                    className="w-full max-w-md h-64 object-cover rounded-lg"
-                  />
-                </div>
-              )}
-            </div>
-
-            <div className="bg-gray-50 rounded-lg p-4">
-              <h4 className="font-medium text-gray-900 mb-2">Weitere Bilder</h4>
-              <p className="text-sm text-gray-600">
-                Die Verwaltung weiterer Bilder ist in Entwicklung.
-              </p>
-            </div>
+            <RoomImageManager
+              apartmentId={apartment.id}
+              existingImages={apartment.apartmentImages || []}
+              roomCategories={roomCategories}
+            />
           </div>
         )}
 
