@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { prisma } from '@/lib/prisma'
-import { RoomCollageGallery } from '@/components/apartments/room-collage-gallery'
+import { ImageGallery } from '@/components/apartment/ImageGallery'
 import { AmenityList } from '@/components/apartments/amenity-list'
 import { ReviewSection } from '@/components/reviews/review-section'
 import { HelpSection } from '@/components/apartments/help-section'
@@ -13,42 +13,36 @@ interface ApartmentDetailProps {
 export default async function ApartmentDetailPage({ params }: ApartmentDetailProps) {
   const { id } = await params
 
-  // Fetch apartment with images and room categories
-  const [apartment, roomCategories] = await Promise.all([
-    prisma.apartment.findUnique({
-      where: {
-        id: id,
-        isActive: true
+  // Fetch apartment with images
+  const apartment = await prisma.apartment.findUnique({
+    where: {
+      id: id,
+      isActive: true
+    },
+    include: {
+      apartmentImages: {
+        orderBy: { order: 'asc' }
       },
-      include: {
-        apartmentImages: {
-          orderBy: { order: 'asc' }
-        },
-        apartmentAmenities: {
-          include: {
-            amenity: true
-          }
-        },
-        reviews: {
-          include: {
-            user: {
-              select: {
-                name: true,
-                image: true
-              }
+      apartmentAmenities: {
+        include: {
+          amenity: true
+        }
+      },
+      reviews: {
+        include: {
+          user: {
+            select: {
+              name: true,
+              image: true
             }
-          },
-          orderBy: {
-            createdAt: 'desc'
           }
+        },
+        orderBy: {
+          createdAt: 'desc'
         }
       }
-    }),
-    prisma.roomCategory.findMany({
-      where: { isActive: true },
-      orderBy: { order: 'asc' }
-    })
-  ])
+    }
+  })
 
   if (!apartment) {
     notFound()
@@ -98,28 +92,15 @@ export default async function ApartmentDetailPage({ params }: ApartmentDetailPro
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column - Details */}
           <div className="lg:col-span-2 space-y-8">
-            {/* Main Image - Aligned with content */}
+            {/* Image Gallery with Lightbox */}
             {apartment.apartmentImages.length > 0 && (
-              <div>
-                <div className="h-[250px] md:h-[300px] rounded-lg overflow-hidden bg-gray-100">
-                  <img
-                    src={apartment.apartmentImages[0]?.url}
-                    alt={apartment.title || apartment.name}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* Room Collage Gallery - Aligned with content */}
-            {apartment.apartmentImages.length > 0 && (
-              <div>
-                <RoomCollageGallery
-                  images={apartment.apartmentImages}
-                  roomCategories={roomCategories}
-                  apartmentName={apartment.title || apartment.name || 'Apartment'}
-                />
-              </div>
+              <ImageGallery
+                images={apartment.apartmentImages.map(img => ({
+                  url: img.url,
+                  alt: img.alt || undefined
+                }))}
+                apartmentName={apartment.title || apartment.name || 'Apartment'}
+              />
             )}
 
             {/* Description */}
