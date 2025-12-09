@@ -182,13 +182,13 @@ export default async function ApartmentDetailPage({ params }: ApartmentDetailPro
             <div className="sticky top-4">
               <div className="bg-white rounded-lg shadow-lg p-6">
                 <h3 className="text-xl font-semibold text-gray-900 mb-4">
-                  Diese Unterkunft buchen
+                  Book this property
                 </h3>
 
                 {apartment.airbnbUrl ? (
                   <div className="space-y-4">
                     <p className="text-gray-600">
-                      Buchen Sie diese Unterkunft direkt bei Airbnb. Dort finden Sie aktuelle Preise und Verfuegbarkeit.
+                      Book this property directly on Airbnb. You will find current prices and availability there.
                     </p>
 
                     <a
@@ -197,22 +197,22 @@ export default async function ApartmentDetailPage({ params }: ApartmentDetailPro
                       rel="noopener noreferrer"
                       className="block w-full bg-gradient-to-r from-rose-500 to-pink-600 text-white text-center py-4 px-6 rounded-lg font-semibold text-lg hover:from-rose-600 hover:to-pink-700 transition-all shadow-md hover:shadow-lg"
                     >
-                      Auf Airbnb buchen
+                      Book on Airbnb
                     </a>
 
                     <p className="text-sm text-gray-500 text-center">
-                      Sie werden zu Airbnb weitergeleitet
+                      You will be redirected to Airbnb
                     </p>
                   </div>
                 ) : (
                   <div className="space-y-4">
                     <p className="text-gray-600">
-                      Diese Unterkunft ist derzeit nicht zur Online-Buchung verfuegbar.
+                      This property is currently not available for online booking.
                     </p>
 
                     <div className="bg-gray-100 rounded-lg p-4">
                       <p className="text-sm text-gray-600">
-                        Bitte kontaktieren Sie uns direkt fuer Buchungsanfragen.
+                        Please contact us directly for booking inquiries.
                       </p>
                     </div>
                   </div>
@@ -223,7 +223,7 @@ export default async function ApartmentDetailPage({ params }: ApartmentDetailPro
                   <div className="flex items-start gap-3">
                     <span className="text-2xl">📍</span>
                     <div>
-                      <h4 className="font-medium text-gray-900">Standort</h4>
+                      <h4 className="font-medium text-gray-900">Location</h4>
                       <p className="text-gray-600">
                         {apartment.city}, {apartment.country}
                       </p>

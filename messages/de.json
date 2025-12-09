@@ -1,0 +1,49 @@
+{
+  "common": {
+    "backToListings": "Zurueck zur Uebersicht",
+    "viewDetails": "Details ansehen",
+    "loading": "Laden...",
+    "location": "Standort"
+  },
+  "home": {
+    "title": "Finden Sie Ihre perfekte Unterkunft",
+    "subtitle": "Entdecken Sie komfortable Apartments im Herzen der Schweiz",
+    "loadingApartments": "Apartments werden geladen..."
+  },
+  "apartment": {
+    "aboutThisPlace": "Ueber diese Unterkunft",
+    "features": "Ausstattung",
+    "amenities": "Annehmlichkeiten",
+    "reviews": "Bewertungen",
+    "bedrooms": "Schlafzimmer",
+    "beds": "Betten",
+    "bathrooms": "Badezimmer",
+    "private": "Privat",
+    "livingSpace": "Wohnflaeche",
+    "guests": "Gaeste",
+    "maximum": "Maximum"
+  },
+  "booking": {
+    "bookThisProperty": "Diese Unterkunft buchen",
+    "bookOnAirbnb": "Auf Airbnb buchen",
+    "bookDirectlyOnAirbnb": "Buchen Sie diese Unterkunft direkt bei Airbnb. Dort finden Sie aktuelle Preise und Verfuegbarkeit.",
+    "redirectToAirbnb": "Sie werden zu Airbnb weitergeleitet",
+    "notAvailable": "Diese Unterkunft ist derzeit nicht zur Online-Buchung verfuegbar.",
+    "contactUs": "Bitte kontaktieren Sie uns direkt fuer Buchungsanfragen."
+  },
+  "navigation": {
+    "home": "Startseite",
+    "apartments": "Apartments",
+    "about": "Ueber uns",
+    "contact": "Kontakt",
+    "signIn": "Anmelden",
+    "signUp": "Registrieren",
+    "signOut": "Abmelden",
+    "admin": "Admin"
+  },
+  "footer": {
+    "allRightsReserved": "Alle Rechte vorbehalten",
+    "privacyPolicy": "Datenschutz",
+    "termsOfService": "Nutzungsbedingungen"
+  }
+}
