@@ -9,6 +9,9 @@ async function createApartment(formData: FormData) {
   const name = formData.get('name') as string
   const description = formData.get('description') as string
   const shortDescription = formData.get('shortDescription') as string
+  const theSpace = formData.get('theSpace') as string
+  const guestAccess = formData.get('guestAccess') as string
+  const otherNotes = formData.get('otherNotes') as string
   const price = parseFloat(formData.get('price') as string)
   const cleaningFee = parseFloat(formData.get('cleaningFee') as string)
   const maxGuests = parseInt(formData.get('maxGuests') as string)
@@ -26,6 +29,9 @@ async function createApartment(formData: FormData) {
       name,
       description,
       shortDescription: shortDescription || description.substring(0, 150),
+      theSpace: theSpace || null,
+      guestAccess: guestAccess || null,
+      otherNotes: otherNotes || null,
       price,
       cleaningFee,
       maxGuests,
@@ -113,6 +119,45 @@ export default async function NewApartmentPage() {
                 id="shortDescription"
                 name="shortDescription"
                 placeholder="Brief description for listings"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="theSpace" className="block text-sm font-medium text-gray-700 mb-1">
+                The Space
+              </label>
+              <textarea
+                id="theSpace"
+                name="theSpace"
+                rows={3}
+                placeholder="Describe the space..."
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="guestAccess" className="block text-sm font-medium text-gray-700 mb-1">
+                Guest Access
+              </label>
+              <textarea
+                id="guestAccess"
+                name="guestAccess"
+                rows={3}
+                placeholder="What guests can access..."
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="otherNotes" className="block text-sm font-medium text-gray-700 mb-1">
+                Other Things to Note
+              </label>
+              <textarea
+                id="otherNotes"
+                name="otherNotes"
+                rows={3}
+                placeholder="Other important information..."
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>

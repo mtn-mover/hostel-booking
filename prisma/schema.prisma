@@ -68,6 +68,9 @@ model Apartment {
   name             String?  // Legacy field
   description      String
   shortDescription String?
+  theSpace         String?  // Description of the space
+  guestAccess      String?  // What guests can access
+  otherNotes       String?  // Other things to note
   maxGuests        Int
   bedrooms         Int
   beds             Int      @default(1)
