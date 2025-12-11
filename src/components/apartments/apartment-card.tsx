@@ -9,6 +9,7 @@ interface ApartmentCardProps {
     shortDescription: string | null
     maxGuests: number
     bedrooms: number
+    beds: number
     bathrooms: number
     price: number
     currentPrice?: number
@@ -74,7 +75,8 @@ export function ApartmentCard({ apartment }: ApartmentCardProps) {
           {/* Apartment Details */}
           <div className="flex items-center text-sm text-gray-500 mb-3 gap-4">
             <span>{apartment.maxGuests} guests</span>
-            <span>{apartment.bedrooms} bed{apartment.bedrooms !== 1 ? 's' : ''}</span>
+            <span>{apartment.bedrooms} bedroom{apartment.bedrooms !== 1 ? 's' : ''}</span>
+            <span>{apartment.beds} bed{apartment.beds !== 1 ? 's' : ''}</span>
             <span>{apartment.bathrooms} bath{apartment.bathrooms !== 1 ? 's' : ''}</span>
           </div>
 

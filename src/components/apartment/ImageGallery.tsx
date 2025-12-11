@@ -10,7 +10,7 @@ import 'swiper/css/navigation'
 import 'swiper/css/pagination'
 
 interface ImageGalleryProps {
-  images: { url: string; alt?: string }[]
+  images: { url: string; alt?: string; roomName?: string }[]
   apartmentName: string
 }
 
@@ -37,51 +37,55 @@ export function ImageGallery({ images, apartmentName }: ImageGalleryProps) {
     const gridImages = images.slice(1, 5)
 
     return (
-      <div className="hidden md:block">
-        <div className="grid grid-cols-4 grid-rows-2 gap-2 h-[400px] rounded-xl overflow-hidden">
-          {/* Main large image - spans 2 columns and 2 rows */}
+      <div className="hidden md:block relative">
+        <div className="flex gap-2 h-[400px] lg:h-[500px] rounded-xl overflow-hidden">
+          {/* Main large image - 50% width on left */}
           <div
-            className="col-span-2 row-span-2 relative cursor-pointer group"
+            className="w-1/2 relative cursor-pointer group"
             onClick={() => openLightbox(0)}
           >
             <img
               src={mainImage.url}
               alt={mainImage.alt || apartmentName}
-              className="w-full h-full object-cover group-hover:brightness-90 transition-all"
+              className="w-full h-full object-cover group-hover:brightness-95 transition-all duration-200"
             />
+            <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-10 transition-opacity duration-200" />
           </div>
 
-          {/* Grid of 4 smaller images */}
-          {gridImages.map((image, index) => (
-            <div
-              key={index}
-              className="relative cursor-pointer group"
-              onClick={() => openLightbox(index + 1)}
-            >
-              <img
-                src={image.url}
-                alt={image.alt || `${apartmentName} - Photo ${index + 2}`}
-                className="w-full h-full object-cover group-hover:brightness-90 transition-all"
-              />
-            </div>
-          ))}
+          {/* Right side - 2x2 grid of smaller images (50% width total) */}
+          <div className="w-1/2 grid grid-cols-2 grid-rows-2 gap-2">
+            {gridImages.map((image, index) => (
+              <div
+                key={index}
+                className="relative cursor-pointer group overflow-hidden"
+                onClick={() => openLightbox(index + 1)}
+              >
+                <img
+                  src={image.url}
+                  alt={image.alt || `${apartmentName} - Photo ${index + 2}`}
+                  className="w-full h-full object-cover group-hover:brightness-95 transition-all duration-200"
+                />
+                <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-10 transition-opacity duration-200" />
+              </div>
+            ))}
 
-          {/* Fill remaining slots if less than 4 grid images */}
-          {Array.from({ length: Math.max(0, 4 - gridImages.length) }).map((_, index) => (
-            <div key={`empty-${index}`} className="bg-gray-100" />
-          ))}
+            {/* Fill remaining slots if less than 4 grid images */}
+            {Array.from({ length: Math.max(0, 4 - gridImages.length) }).map((_, index) => (
+              <div key={`empty-${index}`} className="bg-gray-100" />
+            ))}
+          </div>
         </div>
 
-        {/* Show all photos button */}
-        {images.length > 5 && (
+        {/* Show all photos button - Airbnb style */}
+        {images.length > 1 && (
           <button
             onClick={() => openLightbox(0)}
-            className="absolute bottom-4 right-4 bg-white px-4 py-2 rounded-lg font-medium text-sm shadow-md hover:shadow-lg transition-shadow flex items-center gap-2"
+            className="absolute bottom-4 right-4 bg-white border border-gray-900 px-4 py-2 rounded-lg font-medium text-sm hover:bg-gray-100 transition-colors flex items-center gap-2"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
             </svg>
-            Show all {images.length} photos
+            Show all photos
           </button>
         )}
       </div>

@@ -120,6 +120,7 @@ model Apartment {
   seasonPrices     SeasonPrice[]
   eventPrices      EventPrice[]
   discountRules    DiscountRule[]
+  bedroomDetails   Bedroom[]
 }
 
 model ApartmentImage {
@@ -135,8 +136,21 @@ model ApartmentImage {
 
   apartment Apartment @relation(fields: [apartmentId], references: [id], onDelete: Cascade)
   room      RoomCategory? @relation(fields: [roomId], references: [id], onDelete: SetNull)
-  
+
   @@index([apartmentId, roomId])
+}
+
+model Bedroom {
+  id          String  @id @default(cuid())
+  apartmentId String
+  name        String  // e.g., "Bedroom 1", "Master Bedroom"
+  order       Int     @default(0)
+  beds        String  // e.g., "1 double bed", "2 single beds", "1 double bed, 1 couch"
+  imageUrl    String? // Optional image for the bedroom
+
+  apartment Apartment @relation(fields: [apartmentId], references: [id], onDelete: Cascade)
+
+  @@index([apartmentId])
 }
 
 model Amenity {

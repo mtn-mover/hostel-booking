@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { prisma } from '@/lib/prisma'
 import { ImageGallery } from '@/components/apartment/ImageGallery'
 import { AmenitiesSection } from '@/components/apartment/AmenitiesSection'
+import { WhereYoullSleep } from '@/components/apartment/WhereYoullSleep'
 import { ReviewSection } from '@/components/reviews/review-section'
 import { HelpSection } from '@/components/apartments/help-section'
 
@@ -21,7 +22,10 @@ export default async function ApartmentDetailPage({ params }: ApartmentDetailPro
     },
     include: {
       apartmentImages: {
-        orderBy: { order: 'asc' }
+        orderBy: [{ roomId: 'asc' }, { order: 'asc' }],
+        include: {
+          room: true
+        }
       },
       apartmentAmenities: {
         include: {
@@ -40,6 +44,9 @@ export default async function ApartmentDetailPage({ params }: ApartmentDetailPro
         orderBy: {
           createdAt: 'desc'
         }
+      },
+      bedroomDetails: {
+        orderBy: { order: 'asc' }
       }
     }
   })
@@ -71,38 +78,46 @@ export default async function ApartmentDetailPage({ params }: ApartmentDetailPro
         </div>
 
         {/* Header */}
-        <div className="mb-8">
-          <div className="mb-3">
-            <h1 className="text-4xl font-semibold text-gray-900">
-              {apartment.title || apartment.name}
-              {apartment.shortDescription && (
-                <span> - {apartment.shortDescription}</span>
-              )}
-            </h1>
+        <div className="mb-6">
+          <h1 className="text-2xl md:text-3xl font-semibold text-gray-900 mb-2">
+            {apartment.title || apartment.name}
+          </h1>
+          <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600">
+            {averageRating && (
+              <>
+                <span className="flex items-center font-medium">
+                  ⭐ {averageRating.toFixed(2)}
+                </span>
+                <span className="text-gray-400">·</span>
+                <span className="underline cursor-pointer hover:text-gray-900">
+                  {apartment.reviews.length} reviews
+                </span>
+                <span className="text-gray-400">·</span>
+              </>
+            )}
+            <span className="underline cursor-pointer hover:text-gray-900">
+              {apartment.city}, {apartment.country}
+            </span>
           </div>
-          {averageRating && (
-            <div className="flex items-center gap-4 text-gray-600">
-              <span className="flex items-center">
-                ⭐ {averageRating.toFixed(1)} ({apartment.reviews.length} reviews)
-              </span>
-            </div>
-          )}
         </div>
+
+        {/* Image Gallery - Full Width like Airbnb */}
+        {apartment.apartmentImages.length > 0 && (
+          <div className="mb-8">
+            <ImageGallery
+              images={apartment.apartmentImages.map(img => ({
+                url: img.url,
+                alt: img.alt || undefined,
+                roomName: img.room?.nameEn || img.room?.name || undefined
+              }))}
+              apartmentName={apartment.title || apartment.name || 'Apartment'}
+            />
+          </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column - Details */}
           <div className="lg:col-span-2 space-y-8">
-            {/* Image Gallery with Lightbox */}
-            {apartment.apartmentImages.length > 0 && (
-              <ImageGallery
-                images={apartment.apartmentImages.map(img => ({
-                  url: img.url,
-                  alt: img.alt || undefined
-                }))}
-                apartmentName={apartment.title || apartment.name || 'Apartment'}
-              />
-            )}
-
             {/* Description */}
             <div className="bg-white rounded-lg p-6 shadow-sm">
               <h2 className="text-2xl font-semibold mb-4">About this place</h2>
@@ -145,6 +160,11 @@ export default async function ApartmentDetailPage({ params }: ApartmentDetailPro
                 </div>
               </div>
             </div>
+
+            {/* Where you'll sleep */}
+            {apartment.bedroomDetails.length > 0 && (
+              <WhereYoullSleep bedrooms={apartment.bedroomDetails} />
+            )}
 
             {/* Amenities */}
             {amenities.length > 0 && (
