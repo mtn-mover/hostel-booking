@@ -13,8 +13,8 @@ async function createApartment(formData: FormData) {
   const cleaningFee = parseFloat(formData.get('cleaningFee') as string)
   const maxGuests = parseInt(formData.get('maxGuests') as string)
   const bedrooms = parseInt(formData.get('bedrooms') as string)
+  const beds = parseInt(formData.get('beds') as string)
   const bathrooms = parseInt(formData.get('bathrooms') as string)
-  const size = formData.get('size') ? parseInt(formData.get('size') as string) : null
   const minStayNights = parseInt(formData.get('minStayNights') as string)
   const maxStayNights = formData.get('maxStayNights') ? parseInt(formData.get('maxStayNights') as string) : null
   const airbnbId = formData.get('airbnbId') as string
@@ -30,8 +30,8 @@ async function createApartment(formData: FormData) {
       cleaningFee,
       maxGuests,
       bedrooms,
+      beds,
       bathrooms,
-      size,
       minStayNights,
       maxStayNights,
       airbnbId: airbnbId || null,
@@ -152,7 +152,22 @@ export default async function NewApartmentPage() {
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
-            
+
+            <div>
+              <label htmlFor="beds" className="block text-sm font-medium text-gray-700 mb-1">
+                Beds *
+              </label>
+              <input
+                type="number"
+                id="beds"
+                name="beds"
+                required
+                min="1"
+                defaultValue="1"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+
             <div>
               <label htmlFor="bathrooms" className="block text-sm font-medium text-gray-700 mb-1">
                 Bathrooms *
@@ -168,89 +183,13 @@ export default async function NewApartmentPage() {
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
-            
-            <div>
-              <label htmlFor="size" className="block text-sm font-medium text-gray-700 mb-1">
-                Size (m²)
-              </label>
-              <input
-                type="number"
-                id="size"
-                name="size"
-                min="0"
-                placeholder="45"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
           </div>
         </div>
 
-        {/* Pricing */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-lg font-semibold mb-4">Pricing</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div>
-              <label htmlFor="price" className="block text-sm font-medium text-gray-700 mb-1">
-                Price per Night (CHF) *
-              </label>
-              <input
-                type="number"
-                id="price"
-                name="price"
-                required
-                min="0"
-                step="0.01"
-                placeholder="150.00"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-            
-            <div>
-              <label htmlFor="cleaningFee" className="block text-sm font-medium text-gray-700 mb-1">
-                Cleaning Fee (CHF) *
-              </label>
-              <input
-                type="number"
-                id="cleaningFee"
-                name="cleaningFee"
-                required
-                min="0"
-                step="0.01"
-                defaultValue="50"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-            
-            <div>
-              <label htmlFor="minStayNights" className="block text-sm font-medium text-gray-700 mb-1">
-                Min Stay (nights) *
-              </label>
-              <input
-                type="number"
-                id="minStayNights"
-                name="minStayNights"
-                required
-                min="1"
-                defaultValue="1"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-            
-            <div>
-              <label htmlFor="maxStayNights" className="block text-sm font-medium text-gray-700 mb-1">
-                Max Stay (nights)
-              </label>
-              <input
-                type="number"
-                id="maxStayNights"
-                name="maxStayNights"
-                min="1"
-                placeholder="30"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-          </div>
-        </div>
+        {/* Hidden default values for pricing (temporarily hidden) */}
+        <input type="hidden" name="price" value="0" />
+        <input type="hidden" name="cleaningFee" value="0" />
+        <input type="hidden" name="minStayNights" value="1" />
 
         {/* Airbnb Integration */}
         <div className="bg-white rounded-lg shadow p-6">
