@@ -124,6 +124,36 @@ export default async function ApartmentDetailPage({ params }: ApartmentDetailPro
               <p className="text-gray-700 whitespace-pre-line">
                 {apartment.description}
               </p>
+
+              {/* The Space */}
+              {apartment.theSpace && (
+                <div className="mt-6 pt-6 border-t border-gray-200">
+                  <h3 className="text-lg font-semibold mb-2">The space</h3>
+                  <p className="text-gray-700 whitespace-pre-line">
+                    {apartment.theSpace}
+                  </p>
+                </div>
+              )}
+
+              {/* Guest Access */}
+              {apartment.guestAccess && (
+                <div className="mt-6 pt-6 border-t border-gray-200">
+                  <h3 className="text-lg font-semibold mb-2">Guest access</h3>
+                  <p className="text-gray-700 whitespace-pre-line">
+                    {apartment.guestAccess}
+                  </p>
+                </div>
+              )}
+
+              {/* Other Things to Note */}
+              {apartment.otherNotes && (
+                <div className="mt-6 pt-6 border-t border-gray-200">
+                  <h3 className="text-lg font-semibold mb-2">Other things to note</h3>
+                  <p className="text-gray-700 whitespace-pre-line">
+                    {apartment.otherNotes}
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Features */}
@@ -131,31 +161,28 @@ export default async function ApartmentDetailPage({ params }: ApartmentDetailPro
               <h2 className="text-2xl font-semibold mb-4">Features</h2>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="flex items-center">
+                  <span className="text-2xl mr-2">👥</span>
+                  <div>
+                    <div className="font-medium">{apartment.maxGuests} Guests</div>
+                    <div className="text-sm text-gray-600">Maximum</div>
+                  </div>
+                </div>
+                <div className="flex items-center">
+                  <span className="text-2xl mr-2">🚪</span>
+                  <div>
+                    <div className="font-medium">{apartment.bedrooms} Bedroom{apartment.bedrooms !== 1 ? 's' : ''}</div>
+                  </div>
+                </div>
+                <div className="flex items-center">
                   <span className="text-2xl mr-2">🛏️</span>
                   <div>
-                    <div className="font-medium">{apartment.bedrooms} Bedrooms</div>
-                    <div className="text-sm text-gray-600">{apartment.beds} Beds</div>
+                    <div className="font-medium">{apartment.beds} Bed{apartment.beds !== 1 ? 's' : ''}</div>
                   </div>
                 </div>
                 <div className="flex items-center">
                   <span className="text-2xl mr-2">🚿</span>
                   <div>
-                    <div className="font-medium">{apartment.bathrooms} Bathrooms</div>
-                    <div className="text-sm text-gray-600">Private</div>
-                  </div>
-                </div>
-                <div className="flex items-center">
-                  <span className="text-2xl mr-2">📏</span>
-                  <div>
-                    <div className="font-medium">{apartment.size || 'N/A'} m²</div>
-                    <div className="text-sm text-gray-600">Living space</div>
-                  </div>
-                </div>
-                <div className="flex items-center">
-                  <span className="text-2xl mr-2">👥</span>
-                  <div>
-                    <div className="font-medium">{apartment.maxGuests} Guests</div>
-                    <div className="text-sm text-gray-600">Maximum</div>
+                    <div className="font-medium">{apartment.bathrooms} Bathroom{apartment.bathrooms !== 1 ? 's' : ''}</div>
                   </div>
                 </div>
               </div>
