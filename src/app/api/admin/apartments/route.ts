@@ -32,25 +32,30 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const data = await request.json()
-    
+
     // Create the apartment
     const apartment = await prisma.apartment.create({
       data: {
         title: data.title,
-        name: data.name,
+        name: data.name || data.title,
         description: data.description,
-        shortDescription: data.description.substring(0, 150),
-        price: data.price,
-        maxGuests: data.maxGuests,
-        bedrooms: data.bedrooms,
-        bathrooms: data.bathrooms,
+        shortDescription: data.shortDescription || data.description?.substring(0, 150) || '',
+        theSpace: data.theSpace || null,
+        guestAccess: data.guestAccess || null,
+        otherNotes: data.otherNotes || null,
+        price: data.price || 0,
+        cleaningFee: data.cleaningFee || 0,
+        maxGuests: data.maxGuests || 2,
+        bedrooms: data.bedrooms || 1,
+        beds: data.beds || 1,
+        bathrooms: data.bathrooms || 1,
         size: data.size || null,
         floor: data.floor || null,
         roomNumber: data.roomNumber || null,
         address: data.address || null,
-        city: data.city,
+        city: data.city || 'Grindelwald',
         postalCode: data.postalCode || null,
-        country: data.country,
+        country: data.country || 'Schweiz',
         latitude: data.latitude || null,
         longitude: data.longitude || null,
         checkInTime: data.checkInTime || '15:00',
@@ -59,8 +64,9 @@ export async function POST(request: NextRequest) {
         minStayNights: data.minStayNights || 1,
         maxStayNights: data.maxStayNights || null,
         serviceFeePercentage: data.serviceFeePercentage || 10,
-        isActive: data.isActive ?? true,
+        isActive: data.isActive ?? false,
         mainImage: data.mainImage || null,
+        airbnbId: data.airbnbId || null,
         airbnbListingId: data.airbnbListingId || null,
         airbnbUrl: data.airbnbUrl || null,
         airbnbSyncEnabled: data.airbnbSyncEnabled || false,

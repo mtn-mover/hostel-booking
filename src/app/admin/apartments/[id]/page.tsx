@@ -1,7 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { ApartmentEditFormTabbed } from '@/components/admin/apartment-edit-form-tabbed'
+import { ApartmentWizard } from '@/components/admin/apartment-wizard'
 
 interface Props {
   params: Promise<{
@@ -22,22 +22,11 @@ export default async function AdminApartmentEdit({ params }: Props) {
           include: {
             amenity: true
           }
-        },
-        bookings: {
-          take: 5,
-          orderBy: { createdAt: 'desc' }
-        },
-        reviews: {
-          take: 5,
-          orderBy: { createdAt: 'desc' },
-          include: {
-            user: true
-          }
         }
       }
     }),
     prisma.amenity.findMany({
-      orderBy: { name: 'asc' }
+      orderBy: [{ category: 'asc' }, { name: 'asc' }]
     }),
     prisma.roomCategory.findMany({
       where: { isActive: true },
@@ -52,22 +41,21 @@ export default async function AdminApartmentEdit({ params }: Props) {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <Link 
-            href="/admin/apartments"
-            className="text-blue-600 hover:text-blue-800 mb-2 inline-block"
-          >
-            ← Back to Apartments
-          </Link>
-          <h1 className="text-2xl font-bold text-gray-900">
-            Edit: {apartment.title || apartment.name || 'Apartment'}
-          </h1>
-        </div>
+      <div className="mb-6">
+        <Link
+          href="/admin/apartments"
+          className="text-blue-600 hover:text-blue-800 mb-2 inline-block"
+        >
+          ← Zurück zur Übersicht
+        </Link>
+        <h1 className="text-2xl font-bold text-gray-900">
+          Bearbeiten: {apartment.title || apartment.name || 'Apartment'}
+        </h1>
       </div>
 
-      {/* Edit Form */}
-      <ApartmentEditFormTabbed
+      {/* Wizard Form */}
+      <ApartmentWizard
+        mode="edit"
         apartment={apartment}
         amenities={amenities}
         roomCategories={roomCategories}
