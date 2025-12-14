@@ -573,33 +573,31 @@ export function ApartmentWizard({ mode, apartment, amenities, roomCategories }: 
 
         return (
           <div className="space-y-6">
-            <div className="bg-blue-50 rounded-lg p-4 mb-4">
+            <div className="bg-blue-50 rounded-lg p-4">
               <p className="text-blue-800">
                 <strong>{selectedAmenities.length}</strong> Ausstattungsmerkmale ausgewählt
               </p>
             </div>
 
             {Object.entries(amenitiesByCategory).map(([category, categoryAmenities]: [string, any]) => (
-              <div key={category} className="bg-white border border-gray-200 rounded-lg p-4">
-                <h4 className="font-medium text-gray-900 mb-3">{category}</h4>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              <div key={category} className="border-b border-gray-200 pb-6 last:border-b-0">
+                <h4 className="font-semibold text-gray-900 mb-4 text-lg">{category}</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                   {categoryAmenities.map((amenity: any) => (
                     <label
                       key={amenity.id}
-                      className={`flex items-center p-3 rounded-lg cursor-pointer transition-colors ${
-                        selectedAmenities.includes(amenity.id)
-                          ? 'bg-blue-50 border-2 border-blue-500'
-                          : 'bg-gray-50 border-2 border-transparent hover:bg-gray-100'
-                      }`}
+                      className="flex items-center p-3 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
                     >
                       <input
                         type="checkbox"
                         checked={selectedAmenities.includes(amenity.id)}
                         onChange={() => toggleAmenity(amenity.id)}
-                        className="sr-only"
+                        className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 mr-3"
                       />
-                      <span className="text-xl mr-2">{amenity.icon || '✓'}</span>
-                      <span className="text-sm">{amenity.name}</span>
+                      {amenity.icon && (
+                        <span className="text-xl mr-2">{amenity.icon}</span>
+                      )}
+                      <span className="text-gray-700">{amenity.name}</span>
                     </label>
                   ))}
                 </div>
