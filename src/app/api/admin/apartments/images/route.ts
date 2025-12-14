@@ -18,6 +18,17 @@ export async function POST(request: NextRequest) {
     const apartmentId = formData.get('apartmentId') as string
     const roomId = formData.get('roomId') as string
     const images = formData.getAll('images') as File[]
+    const descriptionsJson = formData.get('descriptions') as string | null
+
+    // Parse descriptions array if provided
+    let descriptions: string[] = []
+    if (descriptionsJson) {
+      try {
+        descriptions = JSON.parse(descriptionsJson)
+      } catch (e) {
+        console.log('Failed to parse descriptions:', e)
+      }
+    }
 
     if (!apartmentId || !roomId || images.length === 0) {
       return NextResponse.json(
@@ -40,32 +51,36 @@ export async function POST(request: NextRequest) {
 
     const uploadedImages = []
 
-    for (const image of images) {
+    for (let i = 0; i < images.length; i++) {
+      const image = images[i]
+      const description = descriptions[i] || ''
+
       // Convert to base64
       const bytes = await image.arrayBuffer()
       const buffer = Buffer.from(bytes)
-      
+
       // Convert AVIF and other formats to JPEG for better compatibility
       let mimeType = image.type || 'image/jpeg'
       let base64 = buffer.toString('base64')
-      
+
       // For AVIF, WEBP, or very large images, use JPEG format
       if (mimeType === 'image/avif' || mimeType === 'image/webp' || buffer.length > 500000) {
         // For now, still save as base64 but mark AVIF for future conversion
         mimeType = 'image/jpeg'
       }
-      
+
       const dataUrl = `data:${mimeType};base64,${base64}`
 
       currentOrder++
 
       // Save to database with base64 data URL
+      // Use provided description if available, otherwise use filename
       const dbImage = await prisma.apartmentImage.create({
         data: {
           apartmentId,
           roomId,
           url: dataUrl,
-          alt: image.name.replace(/\.[^/.]+$/, ''), // Remove file extension
+          alt: description || image.name.replace(/\.[^/.]+$/, ''),
           order: currentOrder
         }
       })

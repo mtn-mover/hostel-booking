@@ -74,7 +74,7 @@ model Apartment {
   maxGuests        Int
   bedrooms         Int
   beds             Int      @default(1)
-  bathrooms        Int
+  bathrooms        Float    @default(1)  // Supports half baths (e.g., 1.5)
   size             Int?     // in square meters
   price            Float    @default(120)
   pricePerNight    Float?   // Legacy field

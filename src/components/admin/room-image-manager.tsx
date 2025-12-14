@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Upload, X, Plus, Image as ImageIcon, GripVertical, Eye, EyeOff, Loader2, Pencil, Check } from 'lucide-react'
 
 interface RoomCategory {
@@ -21,6 +21,12 @@ interface ApartmentImage {
   order: number
 }
 
+interface PendingUpload {
+  file: File
+  preview: string
+  description: string
+}
+
 interface Props {
   apartmentId: string
   existingImages: ApartmentImage[]
@@ -38,6 +44,12 @@ export function RoomImageManager({ apartmentId, existingImages, roomCategories }
   const [editingImageId, setEditingImageId] = useState<string | null>(null)
   const [editingAlt, setEditingAlt] = useState('')
   const [savingAlt, setSavingAlt] = useState(false)
+
+  // Upload modal state
+  const [showUploadModal, setShowUploadModal] = useState(false)
+  const [pendingUploads, setPendingUploads] = useState<PendingUpload[]>([])
+  const [uploadRoomId, setUploadRoomId] = useState<string>('')
+  const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({})
 
   // Fetch images on mount
   useEffect(() => {
@@ -74,19 +86,76 @@ export function RoomImageManager({ apartmentId, existingImages, roomCategories }
   // Get rooms with images
   const roomsWithImages = roomCategories.filter(room => imagesByRoom[room.id]?.length > 0)
 
-  const handleImageUpload = async (roomId: string, files: FileList) => {
+  // Open upload modal when files are selected
+  const handleFileSelect = (roomId: string, files: FileList) => {
     if (!files || files.length === 0) return
-    
-    setUploadingRoom(roomId)
+
+    const newPendingUploads: PendingUpload[] = []
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i]
+      newPendingUploads.push({
+        file,
+        preview: URL.createObjectURL(file),
+        description: ''
+      })
+    }
+
+    // If modal is already open (adding more files), append to existing
+    if (showUploadModal && uploadRoomId === roomId) {
+      setPendingUploads(prev => [...prev, ...newPendingUploads])
+    } else {
+      setPendingUploads(newPendingUploads)
+      setUploadRoomId(roomId)
+      setShowUploadModal(true)
+    }
+  }
+
+  // Update description for a pending upload
+  const updatePendingDescription = (index: number, description: string) => {
+    setPendingUploads(prev => prev.map((upload, i) =>
+      i === index ? { ...upload, description } : upload
+    ))
+  }
+
+  // Remove a pending upload
+  const removePendingUpload = (index: number) => {
+    setPendingUploads(prev => {
+      const newUploads = [...prev]
+      URL.revokeObjectURL(newUploads[index].preview)
+      newUploads.splice(index, 1)
+      return newUploads
+    })
+  }
+
+  // Cancel upload modal
+  const cancelUploadModal = () => {
+    // Clean up preview URLs
+    pendingUploads.forEach(upload => URL.revokeObjectURL(upload.preview))
+    setPendingUploads([])
+    setUploadRoomId('')
+    setShowUploadModal(false)
+  }
+
+  // Confirm and upload images
+  const handleConfirmUpload = async () => {
+    if (pendingUploads.length === 0) return
+
+    setShowUploadModal(false)
+    setUploadingRoom(uploadRoomId)
     setIsLoading(true)
 
     const formData = new FormData()
     formData.append('apartmentId', apartmentId)
-    formData.append('roomId', roomId)
-    
-    for (let i = 0; i < files.length; i++) {
-      formData.append('images', files[i])
-    }
+    formData.append('roomId', uploadRoomId)
+
+    // Add files
+    pendingUploads.forEach((upload, index) => {
+      formData.append('images', upload.file)
+    })
+
+    // Add descriptions as JSON array
+    const descriptions = pendingUploads.map(upload => upload.description)
+    formData.append('descriptions', JSON.stringify(descriptions))
 
     try {
       const response = await fetch('/api/admin/apartments/images', {
@@ -95,19 +164,22 @@ export function RoomImageManager({ apartmentId, existingImages, roomCategories }
       })
 
       const responseData = await response.json()
-      
+
       if (response.ok) {
         console.log('Upload successful:', responseData)
-        // Don't manually add images, just refetch
         await fetchImages()
       } else {
         console.error('Upload failed:', responseData)
-        alert('Failed to upload images: ' + (responseData.error || 'Unknown error'))
+        alert('Fehler beim Hochladen: ' + (responseData.error || 'Unbekannter Fehler'))
       }
     } catch (error) {
       console.error('Upload error:', error)
-      alert('Failed to upload images. Please try again.')
+      alert('Fehler beim Hochladen. Bitte versuchen Sie es erneut.')
     } finally {
+      // Clean up
+      pendingUploads.forEach(upload => URL.revokeObjectURL(upload.preview))
+      setPendingUploads([])
+      setUploadRoomId('')
       setUploadingRoom(null)
       setIsLoading(false)
     }
@@ -432,9 +504,10 @@ export function RoomImageManager({ apartmentId, existingImages, roomCategories }
                       multiple
                       accept="image/*"
                       className="hidden"
+                      ref={(el) => { fileInputRefs.current[room.id] = el }}
                       onChange={(e) => {
                         if (e.target.files && e.target.files.length > 0) {
-                          handleImageUpload(room.id, e.target.files)
+                          handleFileSelect(room.id, e.target.files)
                           e.target.value = '' // Reset input
                         }
                       }}
@@ -443,12 +516,12 @@ export function RoomImageManager({ apartmentId, existingImages, roomCategories }
                     {uploadingRoom === room.id ? (
                       <div className="text-center">
                         <Loader2 className="w-8 h-8 text-blue-600 mx-auto animate-spin" />
-                        <span className="text-xs text-gray-500 mt-2">Uploading...</span>
+                        <span className="text-xs text-gray-500 mt-2">Hochladen...</span>
                       </div>
                     ) : (
                       <>
                         <Upload className="w-6 h-6 text-gray-400" />
-                        <span className="text-xs text-gray-500 mt-1">Add Images</span>
+                        <span className="text-xs text-gray-500 mt-1">Bilder hinzufügen</span>
                       </>
                     )}
                   </label>
@@ -461,16 +534,120 @@ export function RoomImageManager({ apartmentId, existingImages, roomCategories }
 
       {/* Info Box */}
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <h4 className="font-medium text-blue-900 mb-2">How Room Images Work</h4>
+        <h4 className="font-medium text-blue-900 mb-2">Wie Raumbilder funktionieren</h4>
         <ul className="space-y-1 text-sm text-blue-700">
-          <li>• Only rooms with images will be displayed on the apartment page</li>
-          <li>• Upload multiple images per room for better presentation</li>
-          <li>• Images are automatically organized by room category</li>
-          <li>• Add custom rooms for special areas not in the default list</li>
-          <li>• The first image in each room is used as the room's preview</li>
-          <li>• Maximum file size: 5MB per image</li>
+          <li>• Nur Räume mit Bildern werden auf der Apartment-Seite angezeigt</li>
+          <li>• Laden Sie mehrere Bilder pro Raum für eine bessere Präsentation hoch</li>
+          <li>• Bilder werden automatisch nach Raumkategorie organisiert</li>
+          <li>• Fügen Sie benutzerdefinierte Räume für spezielle Bereiche hinzu</li>
+          <li>• Das erste Bild in jedem Raum wird als Vorschau verwendet</li>
+          <li>• Maximale Dateigrösse: 5MB pro Bild</li>
         </ul>
       </div>
+
+      {/* Upload Modal */}
+      {showUploadModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-hidden flex flex-col">
+            {/* Modal Header */}
+            <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Bilder hochladen
+                </h3>
+                <p className="text-sm text-gray-500">
+                  {roomCategories.find(r => r.id === uploadRoomId)?.nameDe || 'Raum'} - {pendingUploads.length} {pendingUploads.length === 1 ? 'Bild' : 'Bilder'}
+                </p>
+              </div>
+              <button
+                onClick={cancelUploadModal}
+                className="p-2 hover:bg-gray-100 rounded-full"
+              >
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="flex-1 overflow-y-auto p-6">
+              <div className="space-y-4">
+                {pendingUploads.map((upload, index) => (
+                  <div
+                    key={index}
+                    className="flex gap-4 p-4 bg-gray-50 rounded-lg border border-gray-200"
+                  >
+                    {/* Image Preview */}
+                    <div className="w-32 h-24 flex-shrink-0 relative rounded overflow-hidden bg-gray-200">
+                      <img
+                        src={upload.preview}
+                        alt={`Vorschau ${index + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                      <button
+                        onClick={() => removePendingUpload(index)}
+                        className="absolute top-1 right-1 p-1 bg-red-600 text-white rounded-full hover:bg-red-700"
+                        title="Bild entfernen"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+
+                    {/* Description Input */}
+                    <div className="flex-1">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Beschreibung (optional)
+                      </label>
+                      <textarea
+                        value={upload.description}
+                        onChange={(e) => updatePendingDescription(index, e.target.value)}
+                        placeholder="z.B. Kühlschrank, Kaffeemaschine, Mikrowelle, Toaster..."
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm resize-none"
+                        rows={2}
+                      />
+                      <p className="text-xs text-gray-400 mt-1">
+                        {upload.file.name} ({(upload.file.size / 1024 / 1024).toFixed(2)} MB)
+                      </p>
+                    </div>
+                  </div>
+                ))}
+
+                {pendingUploads.length === 0 && (
+                  <div className="text-center py-8 text-gray-500">
+                    Keine Bilder ausgewählt
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="px-6 py-4 border-t border-gray-200 flex justify-between items-center bg-gray-50">
+              <button
+                onClick={() => {
+                  const input = fileInputRefs.current[uploadRoomId]
+                  if (input) input.click()
+                }}
+                className="px-4 py-2 text-sm text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg"
+              >
+                + Weitere Bilder hinzufügen
+              </button>
+              <div className="flex gap-3">
+                <button
+                  onClick={cancelUploadModal}
+                  className="px-4 py-2 text-sm text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                >
+                  Abbrechen
+                </button>
+                <button
+                  onClick={handleConfirmUpload}
+                  disabled={pendingUploads.length === 0}
+                  className="px-4 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                >
+                  {pendingUploads.length} {pendingUploads.length === 1 ? 'Bild' : 'Bilder'} hochladen
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

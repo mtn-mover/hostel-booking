@@ -59,13 +59,24 @@ interface StepConfig {
   description: string
 }
 
-const STEPS: StepConfig[] = [
+// Steps for edit mode (includes images)
+const STEPS_EDIT: StepConfig[] = [
   { id: 'basic', title: 'Grunddaten', icon: <Home className="w-5 h-5" />, description: 'Titel und Beschreibung' },
   { id: 'details', title: 'Details', icon: <Users className="w-5 h-5" />, description: 'Gäste, Zimmer, Betten' },
   { id: 'description', title: 'Beschreibungen', icon: <FileText className="w-5 h-5" />, description: 'Detaillierte Infos' },
   { id: 'location', title: 'Standort', icon: <MapPin className="w-5 h-5" />, description: 'Adresse und Ort' },
   { id: 'amenities', title: 'Ausstattung', icon: <Sparkles className="w-5 h-5" />, description: 'Annehmlichkeiten' },
   { id: 'images', title: 'Bilder', icon: <ImageIcon className="w-5 h-5" />, description: 'Fotos hochladen' },
+  { id: 'integration', title: 'Integration', icon: <LinkIcon className="w-5 h-5" />, description: 'Airbnb & Status' },
+]
+
+// Steps for create mode (no images - upload after saving)
+const STEPS_CREATE: StepConfig[] = [
+  { id: 'basic', title: 'Grunddaten', icon: <Home className="w-5 h-5" />, description: 'Titel und Beschreibung' },
+  { id: 'details', title: 'Details', icon: <Users className="w-5 h-5" />, description: 'Gäste, Zimmer, Betten' },
+  { id: 'description', title: 'Beschreibungen', icon: <FileText className="w-5 h-5" />, description: 'Detaillierte Infos' },
+  { id: 'location', title: 'Standort', icon: <MapPin className="w-5 h-5" />, description: 'Adresse und Ort' },
+  { id: 'amenities', title: 'Ausstattung', icon: <Sparkles className="w-5 h-5" />, description: 'Annehmlichkeiten' },
   { id: 'integration', title: 'Integration', icon: <LinkIcon className="w-5 h-5" />, description: 'Airbnb & Status' },
 ]
 
@@ -101,6 +112,9 @@ export function ApartmentWizard({ mode, apartment, amenities, roomCategories }: 
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
+
+  // Use different steps based on mode
+  const STEPS = mode === 'create' ? STEPS_CREATE : STEPS_EDIT
 
   // Form state
   const [formData, setFormData] = useState<ApartmentData>(() => {
@@ -407,17 +421,21 @@ export function ApartmentWizard({ mode, apartment, amenities, roomCategories }: 
                   name="bathrooms"
                   value={formData.bathrooms}
                   onChange={handleInputChange}
-                  min="1"
+                  min="0.5"
                   max="10"
+                  step="0.5"
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg"
                 />
+                <p className="mt-1 text-sm text-gray-500">
+                  0.5 = Gäste-WC / halbes Bad
+                </p>
               </div>
             </div>
 
             <div className="bg-blue-50 rounded-lg p-4">
               <h4 className="font-medium text-blue-900 mb-2">Zusammenfassung</h4>
               <p className="text-blue-800">
-                {formData.maxGuests} Gäste · {formData.bedrooms} Schlafzimmer · {formData.beds} Betten · {formData.bathrooms} Badezimmer
+                {formData.maxGuests} Gäste · {formData.bedrooms} Schlafzimmer · {formData.beds} Betten · {formData.bathrooms} {formData.bathrooms === 1 ? 'Badezimmer' : 'Badezimmer'}
               </p>
             </div>
           </div>
@@ -607,20 +625,7 @@ export function ApartmentWizard({ mode, apartment, amenities, roomCategories }: 
         )
 
       case 'images':
-        if (mode === 'create') {
-          return (
-            <div className="text-center py-12">
-              <ImageIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
-                Bilder nach dem Speichern hinzufügen
-              </h3>
-              <p className="text-gray-500">
-                Speichern Sie zuerst das Apartment, um Bilder hochladen zu können.
-              </p>
-            </div>
-          )
-        }
-
+        // Images step only available in edit mode
         return (
           <RoomImageManager
             apartmentId={apartment?.id || ''}
@@ -632,6 +637,21 @@ export function ApartmentWizard({ mode, apartment, amenities, roomCategories }: 
       case 'integration':
         return (
           <div className="space-y-6">
+            {/* Info for create mode */}
+            {mode === 'create' && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="flex items-start">
+                  <ImageIcon className="w-5 h-5 text-blue-600 mr-3 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <h4 className="font-medium text-blue-900">Bilder hochladen</h4>
+                    <p className="text-sm text-blue-700 mt-1">
+                      Nach dem Speichern des Apartments können Sie Bilder für jeden Raum hochladen.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Status Toggle */}
             <div className="bg-white border border-gray-200 rounded-lg p-6">
               <h4 className="font-medium text-gray-900 mb-4">Apartment Status</h4>
