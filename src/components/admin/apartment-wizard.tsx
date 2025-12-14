@@ -34,7 +34,6 @@ interface ApartmentData {
   beds: number
   bathrooms: number
   address?: string | null
-  postalCode?: string | null
   city: string
   country: string
   latitude?: number | null
@@ -83,7 +82,6 @@ const defaultFormData: ApartmentData = {
   beds: 1,
   bathrooms: 1,
   address: '',
-  postalCode: '3818',
   city: 'Grindelwald',
   country: 'Schweiz',
   latitude: null,
@@ -501,20 +499,6 @@ export function ApartmentWizard({ mode, apartment, amenities, roomCategories }: 
             <div className="grid grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  PLZ
-                </label>
-                <input
-                  type="text"
-                  name="postalCode"
-                  value={formData.postalCode || ''}
-                  onChange={handleInputChange}
-                  placeholder="3818"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Stadt *
                 </label>
                 <input
@@ -526,20 +510,20 @@ export function ApartmentWizard({ mode, apartment, amenities, roomCategories }: 
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
-            </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Land *
-              </label>
-              <input
-                type="text"
-                name="country"
-                value={formData.country}
-                onChange={handleInputChange}
-                placeholder="Schweiz"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Land *
+                </label>
+                <input
+                  type="text"
+                  name="country"
+                  value={formData.country}
+                  onChange={handleInputChange}
+                  placeholder="Schweiz"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-6">

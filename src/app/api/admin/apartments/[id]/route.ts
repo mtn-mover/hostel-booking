@@ -75,7 +75,6 @@ export async function PUT(request: NextRequest, { params }: Props) {
     if (apartmentData.minStayNights !== undefined) updateData.minStayNights = apartmentData.minStayNights ?? 1
     if (apartmentData.maxStayNights !== undefined) updateData.maxStayNights = apartmentData.maxStayNights || null
     if (apartmentData.address !== undefined) updateData.address = apartmentData.address || null
-    if (apartmentData.postalCode !== undefined) updateData.postalCode = apartmentData.postalCode || null
     if (apartmentData.city !== undefined) updateData.city = apartmentData.city
     if (apartmentData.country !== undefined) updateData.country = apartmentData.country
     if (apartmentData.latitude !== undefined) updateData.latitude = apartmentData.latitude || null
