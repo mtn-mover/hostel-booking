@@ -33,6 +33,19 @@ export async function POST(request: NextRequest) {
   try {
     const data = await request.json()
 
+    // Parse numeric values to ensure correct types
+    const price = parseFloat(data.price) || 0
+    const cleaningFee = parseFloat(data.cleaningFee) || 0
+    const maxGuests = parseInt(data.maxGuests) || 2
+    const bedrooms = parseInt(data.bedrooms) || 1
+    const beds = parseInt(data.beds) || 1
+    const bathrooms = parseFloat(data.bathrooms) || 1
+    const size = data.size ? parseFloat(data.size) : null
+    const latitude = data.latitude ? parseFloat(data.latitude) : null
+    const longitude = data.longitude ? parseFloat(data.longitude) : null
+    const minStayNights = parseInt(data.minStayNights) || 1
+    const maxStayNights = data.maxStayNights ? parseInt(data.maxStayNights) : null
+
     // Create the apartment with only fields that exist in schema
     const apartment = await prisma.apartment.create({
       data: {
@@ -43,20 +56,20 @@ export async function POST(request: NextRequest) {
         theSpace: data.theSpace || null,
         guestAccess: data.guestAccess || null,
         otherNotes: data.otherNotes || null,
-        price: data.price || 0,
-        cleaningFee: data.cleaningFee || 0,
-        maxGuests: data.maxGuests || 2,
-        bedrooms: data.bedrooms || 1,
-        beds: data.beds || 1,
-        bathrooms: data.bathrooms || 1,
-        size: data.size || null,
+        price,
+        cleaningFee,
+        maxGuests,
+        bedrooms,
+        beds,
+        bathrooms,
+        size,
         address: data.address || null,
         city: data.city || 'Grindelwald',
         country: data.country || 'Schweiz',
-        latitude: data.latitude || null,
-        longitude: data.longitude || null,
-        minStayNights: data.minStayNights || 1,
-        maxStayNights: data.maxStayNights || null,
+        latitude,
+        longitude,
+        minStayNights,
+        maxStayNights,
         isActive: data.isActive ?? false,
         airbnbId: data.airbnbId || null,
         airbnbUrl: data.airbnbUrl || null,

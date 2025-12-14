@@ -57,6 +57,7 @@ export async function PUT(request: NextRequest, { params }: Props) {
     const { amenityIds, ...apartmentData } = data
 
     // Build update data object, only including defined values
+    // Parse numeric values to ensure correct types for PostgreSQL
     const updateData: any = {}
 
     if (apartmentData.title !== undefined) updateData.title = apartmentData.title
@@ -65,24 +66,24 @@ export async function PUT(request: NextRequest, { params }: Props) {
     if (apartmentData.theSpace !== undefined) updateData.theSpace = apartmentData.theSpace || null
     if (apartmentData.guestAccess !== undefined) updateData.guestAccess = apartmentData.guestAccess || null
     if (apartmentData.otherNotes !== undefined) updateData.otherNotes = apartmentData.otherNotes || null
-    if (apartmentData.maxGuests !== undefined) updateData.maxGuests = apartmentData.maxGuests
-    if (apartmentData.bedrooms !== undefined) updateData.bedrooms = apartmentData.bedrooms
-    if (apartmentData.beds !== undefined) updateData.beds = apartmentData.beds
-    if (apartmentData.bathrooms !== undefined) updateData.bathrooms = apartmentData.bathrooms
-    if (apartmentData.size !== undefined) updateData.size = apartmentData.size || null
-    if (apartmentData.price !== undefined) updateData.price = apartmentData.price ?? 0
-    if (apartmentData.cleaningFee !== undefined) updateData.cleaningFee = apartmentData.cleaningFee ?? 0
-    if (apartmentData.minStayNights !== undefined) updateData.minStayNights = apartmentData.minStayNights ?? 1
-    if (apartmentData.maxStayNights !== undefined) updateData.maxStayNights = apartmentData.maxStayNights || null
+    if (apartmentData.maxGuests !== undefined) updateData.maxGuests = parseInt(apartmentData.maxGuests) || 2
+    if (apartmentData.bedrooms !== undefined) updateData.bedrooms = parseInt(apartmentData.bedrooms) || 1
+    if (apartmentData.beds !== undefined) updateData.beds = parseInt(apartmentData.beds) || 1
+    if (apartmentData.bathrooms !== undefined) updateData.bathrooms = parseFloat(apartmentData.bathrooms) || 1
+    if (apartmentData.size !== undefined) updateData.size = apartmentData.size ? parseFloat(apartmentData.size) : null
+    if (apartmentData.price !== undefined) updateData.price = parseFloat(apartmentData.price) || 0
+    if (apartmentData.cleaningFee !== undefined) updateData.cleaningFee = parseFloat(apartmentData.cleaningFee) || 0
+    if (apartmentData.minStayNights !== undefined) updateData.minStayNights = parseInt(apartmentData.minStayNights) || 1
+    if (apartmentData.maxStayNights !== undefined) updateData.maxStayNights = apartmentData.maxStayNights ? parseInt(apartmentData.maxStayNights) : null
     if (apartmentData.address !== undefined) updateData.address = apartmentData.address || null
     if (apartmentData.city !== undefined) updateData.city = apartmentData.city
     if (apartmentData.country !== undefined) updateData.country = apartmentData.country
-    if (apartmentData.latitude !== undefined) updateData.latitude = apartmentData.latitude || null
-    if (apartmentData.longitude !== undefined) updateData.longitude = apartmentData.longitude || null
+    if (apartmentData.latitude !== undefined) updateData.latitude = apartmentData.latitude ? parseFloat(apartmentData.latitude) : null
+    if (apartmentData.longitude !== undefined) updateData.longitude = apartmentData.longitude ? parseFloat(apartmentData.longitude) : null
     if (apartmentData.isActive !== undefined) updateData.isActive = apartmentData.isActive
     if (apartmentData.airbnbId !== undefined) updateData.airbnbId = apartmentData.airbnbId || null
     if (apartmentData.airbnbUrl !== undefined) updateData.airbnbUrl = apartmentData.airbnbUrl || null
-    if (apartmentData.bookingHorizon !== undefined) updateData.bookingHorizon = apartmentData.bookingHorizon || null
+    if (apartmentData.bookingHorizon !== undefined) updateData.bookingHorizon = apartmentData.bookingHorizon ? parseInt(apartmentData.bookingHorizon) : null
 
     // Update apartment basic data
     const updatedApartment = await prisma.apartment.update({
