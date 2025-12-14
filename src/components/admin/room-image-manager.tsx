@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Upload, X, Plus, Image as ImageIcon, GripVertical, Eye, EyeOff, Loader2 } from 'lucide-react'
+import { Upload, X, Plus, Image as ImageIcon, GripVertical, Eye, EyeOff, Loader2, Pencil, Check } from 'lucide-react'
 
 interface RoomCategory {
   id: string
@@ -35,6 +35,9 @@ export function RoomImageManager({ apartmentId, existingImages, roomCategories }
   const [showAddRoom, setShowAddRoom] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [isInitialized, setIsInitialized] = useState(false)
+  const [editingImageId, setEditingImageId] = useState<string | null>(null)
+  const [editingAlt, setEditingAlt] = useState('')
+  const [savingAlt, setSavingAlt] = useState(false)
 
   // Fetch images on mount
   useEffect(() => {
@@ -158,6 +161,40 @@ export function RoomImageManager({ apartmentId, existingImages, roomCategories }
       // Revert on error
       await fetchImages()
     }
+  }
+
+  const handleSaveAlt = async (imageId: string) => {
+    if (!imageId) return
+    setSavingAlt(true)
+
+    try {
+      const response = await fetch(`/api/admin/apartments/images/${imageId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ alt: editingAlt })
+      })
+
+      if (response.ok) {
+        // Update local state
+        setImages(prev => prev.map(img =>
+          img.id === imageId ? { ...img, alt: editingAlt } : img
+        ))
+        setEditingImageId(null)
+        setEditingAlt('')
+      } else {
+        alert('Fehler beim Speichern der Beschreibung')
+      }
+    } catch (error) {
+      console.error('Save alt error:', error)
+      alert('Fehler beim Speichern der Beschreibung')
+    } finally {
+      setSavingAlt(false)
+    }
+  }
+
+  const startEditingAlt = (image: ApartmentImage) => {
+    setEditingImageId(image.id || null)
+    setEditingAlt(image.alt || '')
   }
 
   const handleAddCustomRoom = async () => {
@@ -292,36 +329,98 @@ export function RoomImageManager({ apartmentId, existingImages, roomCategories }
                   </div>
                 )}
 
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 gap-3">
                   {roomImages
                     .sort((a, b) => (a.order || 0) - (b.order || 0))
                     .map((image, index) => (
                       <div
                         key={image.id || `temp-${index}`}
-                        className="relative group aspect-square bg-gray-100 rounded-lg overflow-hidden"
+                        className="bg-gray-50 rounded-lg overflow-hidden border border-gray-200"
                       >
-                        <img
-                          src={image.url}
-                          alt={image.alt || `${room.nameEn} image ${index + 1}`}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            console.error('Image load error:', e)
-                            e.currentTarget.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect width="100" height="100" fill="%23f3f4f6"/%3E%3Ctext x="50%" y="50%" text-anchor="middle" dy=".3em" fill="%239ca3af" font-family="sans-serif" font-size="12"%3EError%3C/text%3E%3C/svg%3E'
-                          }}
-                        />
-                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                          {image.id && (
-                            <button
-                              onClick={() => handleImageDelete(image.id!)}
-                              className="p-1 bg-red-600 text-white rounded hover:bg-red-700"
-                              title="Delete image"
-                            >
-                              <X className="w-4 h-4" />
-                            </button>
-                          )}
+                        {/* Image */}
+                        <div className="relative group aspect-video bg-gray-100">
+                          <img
+                            src={image.url}
+                            alt={image.alt || `${room.nameEn} image ${index + 1}`}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              console.error('Image load error:', e)
+                              e.currentTarget.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect width="100" height="100" fill="%23f3f4f6"/%3E%3Ctext x="50%" y="50%" text-anchor="middle" dy=".3em" fill="%239ca3af" font-family="sans-serif" font-size="12"%3EError%3C/text%3E%3C/svg%3E'
+                            }}
+                          />
+                          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                            {image.id && (
+                              <>
+                                <button
+                                  onClick={() => startEditingAlt(image)}
+                                  className="p-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                                  title="Beschreibung bearbeiten"
+                                >
+                                  <Pencil className="w-4 h-4" />
+                                </button>
+                                <button
+                                  onClick={() => handleImageDelete(image.id!)}
+                                  className="p-2 bg-red-600 text-white rounded hover:bg-red-700"
+                                  title="Bild löschen"
+                                >
+                                  <X className="w-4 h-4" />
+                                </button>
+                              </>
+                            )}
+                          </div>
+                          <div className="absolute top-2 left-2 bg-black/50 text-white text-xs px-2 py-1 rounded">
+                            #{index + 1}
+                          </div>
                         </div>
-                        <div className="absolute top-2 left-2 bg-black/50 text-white text-xs px-2 py-1 rounded">
-                          #{index + 1}
+
+                        {/* Description */}
+                        <div className="p-2">
+                          {editingImageId === image.id ? (
+                            <div className="flex gap-1">
+                              <textarea
+                                value={editingAlt}
+                                onChange={(e) => setEditingAlt(e.target.value)}
+                                placeholder="z.B. Kühlschrank, Kaffeemaschine, Mikrowelle..."
+                                className="flex-1 text-xs p-2 border border-gray-300 rounded resize-none focus:ring-1 focus:ring-blue-500"
+                                rows={2}
+                                autoFocus
+                              />
+                              <button
+                                onClick={() => handleSaveAlt(image.id!)}
+                                disabled={savingAlt}
+                                className="p-1 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-400 h-fit"
+                                title="Speichern"
+                              >
+                                {savingAlt ? (
+                                  <Loader2 className="w-4 h-4 animate-spin" />
+                                ) : (
+                                  <Check className="w-4 h-4" />
+                                )}
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setEditingImageId(null)
+                                  setEditingAlt('')
+                                }}
+                                className="p-1 bg-gray-400 text-white rounded hover:bg-gray-500 h-fit"
+                                title="Abbrechen"
+                              >
+                                <X className="w-4 h-4" />
+                              </button>
+                            </div>
+                          ) : (
+                            <div
+                              onClick={() => image.id && startEditingAlt(image)}
+                              className="text-xs text-gray-600 cursor-pointer hover:bg-gray-100 p-1 rounded min-h-[2rem]"
+                              title="Klicken um Beschreibung zu bearbeiten"
+                            >
+                              {image.alt ? (
+                                <span>{image.alt}</span>
+                              ) : (
+                                <span className="text-gray-400 italic">+ Beschreibung hinzufügen</span>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </div>
                     ))}
