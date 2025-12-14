@@ -37,58 +37,91 @@ export async function POST(request: NextRequest) {
     console.log('Creating apartment with data:', JSON.stringify(data, null, 2))
 
     // Parse numeric values to ensure correct types for PostgreSQL
-    // IMPORTANT: All values must be proper numbers, not strings or NaN
-    const price = Number(data.price) || 0
-    const cleaningFee = Number(data.cleaningFee) || 0
-    const maxGuests = Math.floor(Number(data.maxGuests)) || 2
-    const bedrooms = Math.floor(Number(data.bedrooms)) || 1
-    const beds = Math.floor(Number(data.beds)) || 1
-    const bathrooms = Number(data.bathrooms) || 1
-    const size = data.size ? Math.floor(Number(data.size)) : null
-    const latitude = data.latitude ? Number(data.latitude) : null
-    const longitude = data.longitude ? Number(data.longitude) : null
-    const minStayNights = Math.floor(Number(data.minStayNights)) || 1
-    const maxStayNights = data.maxStayNights ? Math.floor(Number(data.maxStayNights)) : null
+    // IMPORTANT: All values must be proper JavaScript numbers (not strings or NaN)
+    // Integer fields: maxGuests, bedrooms, beds, size, minStayNights, maxStayNights
+    // Float fields: price, cleaningFee, bathrooms, latitude, longitude
 
-    // Validate that numbers are not NaN
-    if (isNaN(price) || isNaN(cleaningFee) || isNaN(maxGuests) || isNaN(bedrooms) ||
-        isNaN(beds) || isNaN(bathrooms) || isNaN(minStayNights)) {
-      console.error('Invalid numeric values:', { price, cleaningFee, maxGuests, bedrooms, beds, bathrooms, minStayNights })
-      return NextResponse.json(
-        { error: 'Invalid numeric values', message: 'Bitte überprüfen Sie die Zahlenwerte' },
-        { status: 400 }
-      )
-    }
+    // Parse and validate integers
+    const maxGuests = parseInt(String(data.maxGuests), 10)
+    const bedrooms = parseInt(String(data.bedrooms), 10)
+    const beds = parseInt(String(data.beds), 10)
+    const minStayNights = parseInt(String(data.minStayNights), 10)
 
-    console.log('Parsed values:', { price, cleaningFee, maxGuests, bedrooms, beds, bathrooms, size, minStayNights, maxStayNights })
+    // Optional integers
+    const size = data.size !== undefined && data.size !== null && data.size !== ''
+      ? parseInt(String(data.size), 10)
+      : null
+    const maxStayNights = data.maxStayNights !== undefined && data.maxStayNights !== null && data.maxStayNights !== ''
+      ? parseInt(String(data.maxStayNights), 10)
+      : null
+
+    // Parse floats
+    const price = parseFloat(String(data.price))
+    const cleaningFee = parseFloat(String(data.cleaningFee))
+    const bathrooms = parseFloat(String(data.bathrooms))
+
+    // Optional floats
+    const latitude = data.latitude !== undefined && data.latitude !== null && data.latitude !== ''
+      ? parseFloat(String(data.latitude))
+      : null
+    const longitude = data.longitude !== undefined && data.longitude !== null && data.longitude !== ''
+      ? parseFloat(String(data.longitude))
+      : null
+
+    // Apply defaults for required fields if NaN
+    const finalMaxGuests = isNaN(maxGuests) ? 2 : maxGuests
+    const finalBedrooms = isNaN(bedrooms) ? 1 : bedrooms
+    const finalBeds = isNaN(beds) ? 1 : beds
+    const finalBathrooms = isNaN(bathrooms) ? 1.0 : bathrooms
+    const finalPrice = isNaN(price) ? 0.0 : price
+    const finalCleaningFee = isNaN(cleaningFee) ? 0.0 : cleaningFee
+    const finalMinStayNights = isNaN(minStayNights) ? 1 : minStayNights
+    const finalSize = size !== null && !isNaN(size) ? size : null
+    const finalMaxStayNights = maxStayNights !== null && !isNaN(maxStayNights) ? maxStayNights : null
+    const finalLatitude = latitude !== null && !isNaN(latitude) ? latitude : null
+    const finalLongitude = longitude !== null && !isNaN(longitude) ? longitude : null
+
+    console.log('Parsed values:', {
+      maxGuests: finalMaxGuests,
+      bedrooms: finalBedrooms,
+      beds: finalBeds,
+      bathrooms: finalBathrooms,
+      price: finalPrice,
+      cleaningFee: finalCleaningFee,
+      size: finalSize,
+      minStayNights: finalMinStayNights,
+      maxStayNights: finalMaxStayNights,
+      latitude: finalLatitude,
+      longitude: finalLongitude
+    })
 
     // Create the apartment with only fields that exist in schema
     const apartment = await prisma.apartment.create({
       data: {
-        title: data.title,
-        name: data.name || data.title,
-        description: data.description,
-        shortDescription: data.shortDescription || data.description?.substring(0, 150) || '',
-        theSpace: data.theSpace || null,
-        guestAccess: data.guestAccess || null,
-        otherNotes: data.otherNotes || null,
-        price,
-        cleaningFee,
-        maxGuests,
-        bedrooms,
-        beds,
-        bathrooms,
-        size,
-        address: data.address || null,
-        city: data.city || 'Grindelwald',
-        country: data.country || 'Schweiz',
-        latitude,
-        longitude,
-        minStayNights,
-        maxStayNights,
-        isActive: data.isActive ?? false,
-        airbnbId: data.airbnbId || null,
-        airbnbUrl: data.airbnbUrl || null,
+        title: String(data.title || ''),
+        name: String(data.name || data.title || ''),
+        description: String(data.description || ''),
+        shortDescription: data.shortDescription ? String(data.shortDescription) : (data.description?.substring(0, 150) || ''),
+        theSpace: data.theSpace ? String(data.theSpace) : null,
+        guestAccess: data.guestAccess ? String(data.guestAccess) : null,
+        otherNotes: data.otherNotes ? String(data.otherNotes) : null,
+        price: finalPrice,
+        cleaningFee: finalCleaningFee,
+        maxGuests: finalMaxGuests,
+        bedrooms: finalBedrooms,
+        beds: finalBeds,
+        bathrooms: finalBathrooms,
+        size: finalSize,
+        address: data.address ? String(data.address) : null,
+        city: String(data.city || 'Grindelwald'),
+        country: String(data.country || 'Schweiz'),
+        latitude: finalLatitude,
+        longitude: finalLongitude,
+        minStayNights: finalMinStayNights,
+        maxStayNights: finalMaxStayNights,
+        isActive: Boolean(data.isActive ?? false),
+        airbnbId: data.airbnbId ? String(data.airbnbId) : null,
+        airbnbUrl: data.airbnbUrl ? String(data.airbnbUrl) : null,
         // Legacy fields for compatibility
         images: '[]',
         amenities: '[]'

@@ -58,32 +58,90 @@ export async function PUT(request: NextRequest, { params }: Props) {
 
     // Build update data object, only including defined values
     // Parse numeric values to ensure correct types for PostgreSQL
-    const updateData: any = {}
+    // Integer fields: maxGuests, bedrooms, beds, size, minStayNights, maxStayNights
+    // Float fields: price, cleaningFee, bathrooms, latitude, longitude
+    const updateData: Record<string, unknown> = {}
 
-    if (apartmentData.title !== undefined) updateData.title = apartmentData.title
-    if (apartmentData.description !== undefined) updateData.description = apartmentData.description
-    if (apartmentData.shortDescription !== undefined) updateData.shortDescription = apartmentData.shortDescription || null
-    if (apartmentData.theSpace !== undefined) updateData.theSpace = apartmentData.theSpace || null
-    if (apartmentData.guestAccess !== undefined) updateData.guestAccess = apartmentData.guestAccess || null
-    if (apartmentData.otherNotes !== undefined) updateData.otherNotes = apartmentData.otherNotes || null
-    if (apartmentData.maxGuests !== undefined) updateData.maxGuests = parseInt(apartmentData.maxGuests, 10) || 2
-    if (apartmentData.bedrooms !== undefined) updateData.bedrooms = parseInt(apartmentData.bedrooms, 10) || 1
-    if (apartmentData.beds !== undefined) updateData.beds = parseInt(apartmentData.beds, 10) || 1
-    if (apartmentData.bathrooms !== undefined) updateData.bathrooms = parseFloat(apartmentData.bathrooms) || 1
-    if (apartmentData.size !== undefined) updateData.size = apartmentData.size ? parseInt(apartmentData.size, 10) : null // Int in schema!
-    if (apartmentData.price !== undefined) updateData.price = parseFloat(apartmentData.price) || 0
-    if (apartmentData.cleaningFee !== undefined) updateData.cleaningFee = parseFloat(apartmentData.cleaningFee) || 0
-    if (apartmentData.minStayNights !== undefined) updateData.minStayNights = parseInt(apartmentData.minStayNights, 10) || 1
-    if (apartmentData.maxStayNights !== undefined) updateData.maxStayNights = apartmentData.maxStayNights ? parseInt(apartmentData.maxStayNights, 10) : null
-    if (apartmentData.address !== undefined) updateData.address = apartmentData.address || null
-    if (apartmentData.city !== undefined) updateData.city = apartmentData.city
-    if (apartmentData.country !== undefined) updateData.country = apartmentData.country
-    if (apartmentData.latitude !== undefined) updateData.latitude = apartmentData.latitude ? parseFloat(apartmentData.latitude) : null
-    if (apartmentData.longitude !== undefined) updateData.longitude = apartmentData.longitude ? parseFloat(apartmentData.longitude) : null
-    if (apartmentData.isActive !== undefined) updateData.isActive = apartmentData.isActive
-    if (apartmentData.airbnbId !== undefined) updateData.airbnbId = apartmentData.airbnbId || null
-    if (apartmentData.airbnbUrl !== undefined) updateData.airbnbUrl = apartmentData.airbnbUrl || null
-    if (apartmentData.bookingHorizon !== undefined) updateData.bookingHorizon = apartmentData.bookingHorizon ? parseInt(apartmentData.bookingHorizon) : null
+    // String fields
+    if (apartmentData.title !== undefined) updateData.title = String(apartmentData.title)
+    if (apartmentData.description !== undefined) updateData.description = String(apartmentData.description)
+    if (apartmentData.shortDescription !== undefined) updateData.shortDescription = apartmentData.shortDescription ? String(apartmentData.shortDescription) : null
+    if (apartmentData.theSpace !== undefined) updateData.theSpace = apartmentData.theSpace ? String(apartmentData.theSpace) : null
+    if (apartmentData.guestAccess !== undefined) updateData.guestAccess = apartmentData.guestAccess ? String(apartmentData.guestAccess) : null
+    if (apartmentData.otherNotes !== undefined) updateData.otherNotes = apartmentData.otherNotes ? String(apartmentData.otherNotes) : null
+    if (apartmentData.address !== undefined) updateData.address = apartmentData.address ? String(apartmentData.address) : null
+    if (apartmentData.city !== undefined) updateData.city = String(apartmentData.city)
+    if (apartmentData.country !== undefined) updateData.country = String(apartmentData.country)
+    if (apartmentData.airbnbId !== undefined) updateData.airbnbId = apartmentData.airbnbId ? String(apartmentData.airbnbId) : null
+    if (apartmentData.airbnbUrl !== undefined) updateData.airbnbUrl = apartmentData.airbnbUrl ? String(apartmentData.airbnbUrl) : null
+    if (apartmentData.bookingHorizon !== undefined) updateData.bookingHorizon = apartmentData.bookingHorizon ? String(apartmentData.bookingHorizon) : null
+
+    // Integer fields
+    if (apartmentData.maxGuests !== undefined) {
+      const val = parseInt(String(apartmentData.maxGuests), 10)
+      updateData.maxGuests = isNaN(val) ? 2 : val
+    }
+    if (apartmentData.bedrooms !== undefined) {
+      const val = parseInt(String(apartmentData.bedrooms), 10)
+      updateData.bedrooms = isNaN(val) ? 1 : val
+    }
+    if (apartmentData.beds !== undefined) {
+      const val = parseInt(String(apartmentData.beds), 10)
+      updateData.beds = isNaN(val) ? 1 : val
+    }
+    if (apartmentData.size !== undefined) {
+      if (apartmentData.size !== null && apartmentData.size !== '') {
+        const val = parseInt(String(apartmentData.size), 10)
+        updateData.size = isNaN(val) ? null : val
+      } else {
+        updateData.size = null
+      }
+    }
+    if (apartmentData.minStayNights !== undefined) {
+      const val = parseInt(String(apartmentData.minStayNights), 10)
+      updateData.minStayNights = isNaN(val) ? 1 : val
+    }
+    if (apartmentData.maxStayNights !== undefined) {
+      if (apartmentData.maxStayNights !== null && apartmentData.maxStayNights !== '') {
+        const val = parseInt(String(apartmentData.maxStayNights), 10)
+        updateData.maxStayNights = isNaN(val) ? null : val
+      } else {
+        updateData.maxStayNights = null
+      }
+    }
+
+    // Float fields
+    if (apartmentData.price !== undefined) {
+      const val = parseFloat(String(apartmentData.price))
+      updateData.price = isNaN(val) ? 0 : val
+    }
+    if (apartmentData.cleaningFee !== undefined) {
+      const val = parseFloat(String(apartmentData.cleaningFee))
+      updateData.cleaningFee = isNaN(val) ? 0 : val
+    }
+    if (apartmentData.bathrooms !== undefined) {
+      const val = parseFloat(String(apartmentData.bathrooms))
+      updateData.bathrooms = isNaN(val) ? 1 : val
+    }
+    if (apartmentData.latitude !== undefined) {
+      if (apartmentData.latitude !== null && apartmentData.latitude !== '') {
+        const val = parseFloat(String(apartmentData.latitude))
+        updateData.latitude = isNaN(val) ? null : val
+      } else {
+        updateData.latitude = null
+      }
+    }
+    if (apartmentData.longitude !== undefined) {
+      if (apartmentData.longitude !== null && apartmentData.longitude !== '') {
+        const val = parseFloat(String(apartmentData.longitude))
+        updateData.longitude = isNaN(val) ? null : val
+      } else {
+        updateData.longitude = null
+      }
+    }
+
+    // Boolean fields
+    if (apartmentData.isActive !== undefined) updateData.isActive = Boolean(apartmentData.isActive)
 
     // Update apartment basic data
     const updatedApartment = await prisma.apartment.update({
