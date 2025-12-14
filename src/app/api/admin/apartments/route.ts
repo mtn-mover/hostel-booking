@@ -95,38 +95,68 @@ export async function POST(request: NextRequest) {
       longitude: finalLongitude
     })
 
-    // Create the apartment with only fields that exist in schema
-    const apartment = await prisma.apartment.create({
-      data: {
-        title: String(data.title || ''),
-        name: String(data.name || data.title || ''),
-        description: String(data.description || ''),
-        shortDescription: data.shortDescription ? String(data.shortDescription) : (data.description?.substring(0, 150) || ''),
-        theSpace: data.theSpace ? String(data.theSpace) : null,
-        guestAccess: data.guestAccess ? String(data.guestAccess) : null,
-        otherNotes: data.otherNotes ? String(data.otherNotes) : null,
-        price: finalPrice,
-        cleaningFee: finalCleaningFee,
-        maxGuests: finalMaxGuests,
-        bedrooms: finalBedrooms,
-        beds: finalBeds,
-        bathrooms: finalBathrooms,
-        size: finalSize,
-        address: data.address ? String(data.address) : null,
-        city: String(data.city || 'Grindelwald'),
-        country: String(data.country || 'Schweiz'),
-        latitude: finalLatitude,
-        longitude: finalLongitude,
-        minStayNights: finalMinStayNights,
-        maxStayNights: finalMaxStayNights,
-        isActive: Boolean(data.isActive ?? false),
-        airbnbId: data.airbnbId ? String(data.airbnbId) : null,
-        airbnbUrl: data.airbnbUrl ? String(data.airbnbUrl) : null,
-        // Legacy fields for compatibility
-        images: '[]',
-        amenities: '[]'
-      }
+    // Prepare string values
+    const title = String(data.title || '')
+    const name = String(data.name || data.title || '')
+    const description = String(data.description || '')
+    const shortDescription = data.shortDescription ? String(data.shortDescription) : (data.description?.substring(0, 150) || '')
+    const theSpace = data.theSpace ? String(data.theSpace) : null
+    const guestAccess = data.guestAccess ? String(data.guestAccess) : null
+    const otherNotes = data.otherNotes ? String(data.otherNotes) : null
+    const address = data.address ? String(data.address) : null
+    const city = String(data.city || 'Grindelwald')
+    const country = String(data.country || 'Schweiz')
+    const isActive = Boolean(data.isActive ?? false)
+    const airbnbId = data.airbnbId ? String(data.airbnbId) : null
+    const airbnbUrl = data.airbnbUrl ? String(data.airbnbUrl) : null
+
+    // Generate a unique ID
+    const apartmentId = `apt_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
+
+    // Create apartment using raw SQL to avoid binary protocol issues with Prisma Accelerate
+    // Use text protocol by casting all values explicitly
+    await prisma.$executeRawUnsafe(`
+      INSERT INTO "Apartment" (
+        "id", "title", "name", "description", "shortDescription",
+        "theSpace", "guestAccess", "otherNotes",
+        "price", "cleaningFee", "maxGuests", "bedrooms", "beds", "bathrooms", "size",
+        "address", "city", "country", "latitude", "longitude",
+        "minStayNights", "maxStayNights", "isActive",
+        "airbnbId", "airbnbUrl", "images", "amenities",
+        "createdAt", "updatedAt"
+      ) VALUES (
+        $1, $2, $3, $4, $5,
+        $6, $7, $8,
+        $9::double precision, $10::double precision,
+        $11::integer, $12::integer, $13::integer,
+        $14::double precision, $15::integer,
+        $16, $17, $18,
+        $19::double precision, $20::double precision,
+        $21::integer, $22::integer, $23::boolean,
+        $24, $25, '[]', '[]',
+        NOW(), NOW()
+      )
+    `,
+      apartmentId,
+      title, name, description, shortDescription,
+      theSpace, guestAccess, otherNotes,
+      finalPrice, finalCleaningFee,
+      finalMaxGuests, finalBedrooms, finalBeds,
+      finalBathrooms, finalSize,
+      address, city, country,
+      finalLatitude, finalLongitude,
+      finalMinStayNights, finalMaxStayNights, isActive,
+      airbnbId, airbnbUrl
+    )
+
+    // Get the created apartment
+    const apartment = await prisma.apartment.findUnique({
+      where: { id: apartmentId }
     })
+
+    if (!apartment) {
+      throw new Error('Failed to create apartment - could not retrieve after insert')
+    }
 
     // Create amenity relationships if provided
     if (data.amenityIds && data.amenityIds.length > 0) {
