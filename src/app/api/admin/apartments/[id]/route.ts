@@ -45,10 +45,10 @@ export async function PUT(request: NextRequest, { params }: Props) {
   try {
     const { id } = await params
     const session = await getServerSession(authOptions)
-    
+
     if (!session?.user || session.user.role !== 'ADMIN') {
       return NextResponse.json(
-        { error: 'Unauthorized' },
+        { error: 'Unauthorized', message: 'Nicht autorisiert. Bitte melden Sie sich als Admin an.' },
         { status: 401 }
       )
     }
@@ -56,36 +56,39 @@ export async function PUT(request: NextRequest, { params }: Props) {
     const data = await request.json()
     const { amenityIds, ...apartmentData } = data
 
+    // Build update data object, only including defined values
+    const updateData: any = {}
+
+    if (apartmentData.title !== undefined) updateData.title = apartmentData.title
+    if (apartmentData.description !== undefined) updateData.description = apartmentData.description
+    if (apartmentData.shortDescription !== undefined) updateData.shortDescription = apartmentData.shortDescription || null
+    if (apartmentData.theSpace !== undefined) updateData.theSpace = apartmentData.theSpace || null
+    if (apartmentData.guestAccess !== undefined) updateData.guestAccess = apartmentData.guestAccess || null
+    if (apartmentData.otherNotes !== undefined) updateData.otherNotes = apartmentData.otherNotes || null
+    if (apartmentData.maxGuests !== undefined) updateData.maxGuests = apartmentData.maxGuests
+    if (apartmentData.bedrooms !== undefined) updateData.bedrooms = apartmentData.bedrooms
+    if (apartmentData.beds !== undefined) updateData.beds = apartmentData.beds
+    if (apartmentData.bathrooms !== undefined) updateData.bathrooms = apartmentData.bathrooms
+    if (apartmentData.size !== undefined) updateData.size = apartmentData.size || null
+    if (apartmentData.price !== undefined) updateData.price = apartmentData.price ?? 0
+    if (apartmentData.cleaningFee !== undefined) updateData.cleaningFee = apartmentData.cleaningFee ?? 0
+    if (apartmentData.minStayNights !== undefined) updateData.minStayNights = apartmentData.minStayNights ?? 1
+    if (apartmentData.maxStayNights !== undefined) updateData.maxStayNights = apartmentData.maxStayNights || null
+    if (apartmentData.address !== undefined) updateData.address = apartmentData.address || null
+    if (apartmentData.postalCode !== undefined) updateData.postalCode = apartmentData.postalCode || null
+    if (apartmentData.city !== undefined) updateData.city = apartmentData.city
+    if (apartmentData.country !== undefined) updateData.country = apartmentData.country
+    if (apartmentData.latitude !== undefined) updateData.latitude = apartmentData.latitude || null
+    if (apartmentData.longitude !== undefined) updateData.longitude = apartmentData.longitude || null
+    if (apartmentData.isActive !== undefined) updateData.isActive = apartmentData.isActive
+    if (apartmentData.airbnbId !== undefined) updateData.airbnbId = apartmentData.airbnbId || null
+    if (apartmentData.airbnbUrl !== undefined) updateData.airbnbUrl = apartmentData.airbnbUrl || null
+    if (apartmentData.bookingHorizon !== undefined) updateData.bookingHorizon = apartmentData.bookingHorizon || null
+
     // Update apartment basic data
     const updatedApartment = await prisma.apartment.update({
       where: { id },
-      data: {
-        title: apartmentData.title,
-        description: apartmentData.description,
-        shortDescription: apartmentData.shortDescription || null,
-        theSpace: apartmentData.theSpace || null,
-        guestAccess: apartmentData.guestAccess || null,
-        otherNotes: apartmentData.otherNotes || null,
-        maxGuests: apartmentData.maxGuests,
-        bedrooms: apartmentData.bedrooms,
-        beds: apartmentData.beds,
-        bathrooms: apartmentData.bathrooms,
-        size: apartmentData.size || null,
-        price: apartmentData.price ?? 0,
-        cleaningFee: apartmentData.cleaningFee ?? 0,
-        minStayNights: apartmentData.minStayNights ?? 1,
-        maxStayNights: apartmentData.maxStayNights || null,
-        address: apartmentData.address || null,
-        postalCode: apartmentData.postalCode || null,
-        city: apartmentData.city,
-        country: apartmentData.country,
-        latitude: apartmentData.latitude || null,
-        longitude: apartmentData.longitude || null,
-        isActive: apartmentData.isActive,
-        airbnbId: apartmentData.airbnbId || null,
-        airbnbUrl: apartmentData.airbnbUrl || null,
-        bookingHorizon: apartmentData.bookingHorizon || null,
-      }
+      data: updateData
     })
 
     // Update amenities if provided
@@ -109,8 +112,9 @@ export async function PUT(request: NextRequest, { params }: Props) {
     return NextResponse.json(updatedApartment)
   } catch (error) {
     console.error('Update apartment error:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
     return NextResponse.json(
-      { error: 'Failed to update apartment' },
+      { error: 'Failed to update apartment', message: `Fehler beim Aktualisieren: ${errorMessage}` },
       { status: 500 }
     )
   }

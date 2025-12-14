@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
   try {
     const data = await request.json()
 
-    // Create the apartment
+    // Create the apartment with only fields that exist in schema
     const apartment = await prisma.apartment.create({
       data: {
         title: data.title,
@@ -50,26 +50,16 @@ export async function POST(request: NextRequest) {
         beds: data.beds || 1,
         bathrooms: data.bathrooms || 1,
         size: data.size || null,
-        floor: data.floor || null,
-        roomNumber: data.roomNumber || null,
         address: data.address || null,
         city: data.city || 'Grindelwald',
-        postalCode: data.postalCode || null,
         country: data.country || 'Schweiz',
         latitude: data.latitude || null,
         longitude: data.longitude || null,
-        checkInTime: data.checkInTime || '15:00',
-        checkOutTime: data.checkOutTime || '11:00',
-        bookingHorizon: data.bookingHorizon || 365,
         minStayNights: data.minStayNights || 1,
         maxStayNights: data.maxStayNights || null,
-        serviceFeePercentage: data.serviceFeePercentage || 10,
         isActive: data.isActive ?? false,
-        mainImage: data.mainImage || null,
         airbnbId: data.airbnbId || null,
-        airbnbListingId: data.airbnbListingId || null,
         airbnbUrl: data.airbnbUrl || null,
-        airbnbSyncEnabled: data.airbnbSyncEnabled || false,
         // Legacy fields for compatibility
         images: '[]',
         amenities: '[]'
@@ -98,8 +88,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(apartment)
   } catch (error) {
     console.error('Error creating apartment:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
     return NextResponse.json(
-      { error: 'Failed to create apartment' },
+      { error: 'Failed to create apartment', message: `Fehler beim Erstellen: ${errorMessage}` },
       { status: 500 }
     )
   }
