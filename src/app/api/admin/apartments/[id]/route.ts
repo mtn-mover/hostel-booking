@@ -56,97 +56,180 @@ export async function PUT(request: NextRequest, { params }: Props) {
     const data = await request.json()
     const { amenityIds, ...apartmentData } = data
 
-    // Build update data object, only including defined values
-    // Parse numeric values to ensure correct types for PostgreSQL
-    // Integer fields: maxGuests, bedrooms, beds, size, minStayNights, maxStayNights
-    // Float fields: price, cleaningFee, bathrooms, latitude, longitude
-    const updateData: Record<string, unknown> = {}
+    // Get current apartment data to merge with updates
+    const currentApartment = await prisma.apartment.findUnique({
+      where: { id }
+    })
 
+    if (!currentApartment) {
+      return NextResponse.json(
+        { error: 'Apartment not found' },
+        { status: 404 }
+      )
+    }
+
+    // Parse and prepare all fields with proper types
     // String fields
-    if (apartmentData.title !== undefined) updateData.title = String(apartmentData.title)
-    if (apartmentData.description !== undefined) updateData.description = String(apartmentData.description)
-    if (apartmentData.shortDescription !== undefined) updateData.shortDescription = apartmentData.shortDescription ? String(apartmentData.shortDescription) : null
-    if (apartmentData.theSpace !== undefined) updateData.theSpace = apartmentData.theSpace ? String(apartmentData.theSpace) : null
-    if (apartmentData.guestAccess !== undefined) updateData.guestAccess = apartmentData.guestAccess ? String(apartmentData.guestAccess) : null
-    if (apartmentData.otherNotes !== undefined) updateData.otherNotes = apartmentData.otherNotes ? String(apartmentData.otherNotes) : null
-    if (apartmentData.address !== undefined) updateData.address = apartmentData.address ? String(apartmentData.address) : null
-    if (apartmentData.city !== undefined) updateData.city = String(apartmentData.city)
-    if (apartmentData.country !== undefined) updateData.country = String(apartmentData.country)
-    if (apartmentData.airbnbId !== undefined) updateData.airbnbId = apartmentData.airbnbId ? String(apartmentData.airbnbId) : null
-    if (apartmentData.airbnbUrl !== undefined) updateData.airbnbUrl = apartmentData.airbnbUrl ? String(apartmentData.airbnbUrl) : null
-    if (apartmentData.bookingHorizon !== undefined) updateData.bookingHorizon = apartmentData.bookingHorizon ? String(apartmentData.bookingHorizon) : null
+    const title = apartmentData.title !== undefined ? String(apartmentData.title) : currentApartment.title
+    const description = apartmentData.description !== undefined ? String(apartmentData.description) : currentApartment.description
+    const shortDescription = apartmentData.shortDescription !== undefined
+      ? (apartmentData.shortDescription ? String(apartmentData.shortDescription) : null)
+      : currentApartment.shortDescription
+    const theSpace = apartmentData.theSpace !== undefined
+      ? (apartmentData.theSpace ? String(apartmentData.theSpace) : null)
+      : currentApartment.theSpace
+    const guestAccess = apartmentData.guestAccess !== undefined
+      ? (apartmentData.guestAccess ? String(apartmentData.guestAccess) : null)
+      : currentApartment.guestAccess
+    const otherNotes = apartmentData.otherNotes !== undefined
+      ? (apartmentData.otherNotes ? String(apartmentData.otherNotes) : null)
+      : currentApartment.otherNotes
+    const address = apartmentData.address !== undefined
+      ? (apartmentData.address ? String(apartmentData.address) : null)
+      : currentApartment.address
+    const city = apartmentData.city !== undefined ? String(apartmentData.city) : currentApartment.city
+    const country = apartmentData.country !== undefined ? String(apartmentData.country) : currentApartment.country
+    const airbnbId = apartmentData.airbnbId !== undefined
+      ? (apartmentData.airbnbId ? String(apartmentData.airbnbId) : null)
+      : currentApartment.airbnbId
+    const airbnbUrl = apartmentData.airbnbUrl !== undefined
+      ? (apartmentData.airbnbUrl ? String(apartmentData.airbnbUrl) : null)
+      : currentApartment.airbnbUrl
+    const bookingHorizon = apartmentData.bookingHorizon !== undefined
+      ? (apartmentData.bookingHorizon ? String(apartmentData.bookingHorizon) : null)
+      : currentApartment.bookingHorizon
 
     // Integer fields
+    let maxGuests = currentApartment.maxGuests
     if (apartmentData.maxGuests !== undefined) {
       const val = parseInt(String(apartmentData.maxGuests), 10)
-      updateData.maxGuests = isNaN(val) ? 2 : val
+      maxGuests = isNaN(val) ? 2 : val
     }
+
+    let bedrooms = currentApartment.bedrooms
     if (apartmentData.bedrooms !== undefined) {
       const val = parseInt(String(apartmentData.bedrooms), 10)
-      updateData.bedrooms = isNaN(val) ? 1 : val
+      bedrooms = isNaN(val) ? 1 : val
     }
+
+    let beds = currentApartment.beds
     if (apartmentData.beds !== undefined) {
       const val = parseInt(String(apartmentData.beds), 10)
-      updateData.beds = isNaN(val) ? 1 : val
+      beds = isNaN(val) ? 1 : val
     }
+
+    let size = currentApartment.size
     if (apartmentData.size !== undefined) {
       if (apartmentData.size !== null && apartmentData.size !== '') {
         const val = parseInt(String(apartmentData.size), 10)
-        updateData.size = isNaN(val) ? null : val
+        size = isNaN(val) ? null : val
       } else {
-        updateData.size = null
+        size = null
       }
     }
+
+    let minStayNights = currentApartment.minStayNights
     if (apartmentData.minStayNights !== undefined) {
       const val = parseInt(String(apartmentData.minStayNights), 10)
-      updateData.minStayNights = isNaN(val) ? 1 : val
+      minStayNights = isNaN(val) ? 1 : val
     }
+
+    let maxStayNights = currentApartment.maxStayNights
     if (apartmentData.maxStayNights !== undefined) {
       if (apartmentData.maxStayNights !== null && apartmentData.maxStayNights !== '') {
         const val = parseInt(String(apartmentData.maxStayNights), 10)
-        updateData.maxStayNights = isNaN(val) ? null : val
+        maxStayNights = isNaN(val) ? null : val
       } else {
-        updateData.maxStayNights = null
+        maxStayNights = null
       }
     }
 
     // Float fields
+    let price = currentApartment.price
     if (apartmentData.price !== undefined) {
       const val = parseFloat(String(apartmentData.price))
-      updateData.price = isNaN(val) ? 0 : val
+      price = isNaN(val) ? 0 : val
     }
+
+    let cleaningFee = currentApartment.cleaningFee
     if (apartmentData.cleaningFee !== undefined) {
       const val = parseFloat(String(apartmentData.cleaningFee))
-      updateData.cleaningFee = isNaN(val) ? 0 : val
+      cleaningFee = isNaN(val) ? 0 : val
     }
+
+    let bathrooms = currentApartment.bathrooms
     if (apartmentData.bathrooms !== undefined) {
       const val = parseFloat(String(apartmentData.bathrooms))
-      updateData.bathrooms = isNaN(val) ? 1 : val
+      bathrooms = isNaN(val) ? 1 : val
     }
+
+    let latitude = currentApartment.latitude
     if (apartmentData.latitude !== undefined) {
       if (apartmentData.latitude !== null && apartmentData.latitude !== '') {
         const val = parseFloat(String(apartmentData.latitude))
-        updateData.latitude = isNaN(val) ? null : val
+        latitude = isNaN(val) ? null : val
       } else {
-        updateData.latitude = null
+        latitude = null
       }
     }
+
+    let longitude = currentApartment.longitude
     if (apartmentData.longitude !== undefined) {
       if (apartmentData.longitude !== null && apartmentData.longitude !== '') {
         const val = parseFloat(String(apartmentData.longitude))
-        updateData.longitude = isNaN(val) ? null : val
+        longitude = isNaN(val) ? null : val
       } else {
-        updateData.longitude = null
+        longitude = null
       }
     }
 
     // Boolean fields
-    if (apartmentData.isActive !== undefined) updateData.isActive = Boolean(apartmentData.isActive)
+    const isActive = apartmentData.isActive !== undefined ? Boolean(apartmentData.isActive) : currentApartment.isActive
 
-    // Update apartment basic data
-    const updatedApartment = await prisma.apartment.update({
-      where: { id },
-      data: updateData
+    // Use raw SQL to update to avoid binary protocol issues
+    await prisma.$executeRawUnsafe(`
+      UPDATE "Apartment" SET
+        "title" = $1,
+        "description" = $2,
+        "shortDescription" = $3,
+        "theSpace" = $4,
+        "guestAccess" = $5,
+        "otherNotes" = $6,
+        "price" = $7::double precision,
+        "cleaningFee" = $8::double precision,
+        "maxGuests" = $9::integer,
+        "bedrooms" = $10::integer,
+        "beds" = $11::integer,
+        "bathrooms" = $12::double precision,
+        "size" = $13::integer,
+        "address" = $14,
+        "city" = $15,
+        "country" = $16,
+        "latitude" = $17::double precision,
+        "longitude" = $18::double precision,
+        "minStayNights" = $19::integer,
+        "maxStayNights" = $20::integer,
+        "isActive" = $21::boolean,
+        "airbnbId" = $22,
+        "airbnbUrl" = $23,
+        "bookingHorizon" = $24,
+        "updatedAt" = NOW()
+      WHERE "id" = $25
+    `,
+      title, description, shortDescription,
+      theSpace, guestAccess, otherNotes,
+      price, cleaningFee,
+      maxGuests, bedrooms, beds, bathrooms, size,
+      address, city, country,
+      latitude, longitude,
+      minStayNights, maxStayNights, isActive,
+      airbnbId, airbnbUrl, bookingHorizon,
+      id
+    )
+
+    // Get updated apartment
+    const updatedApartment = await prisma.apartment.findUnique({
+      where: { id }
     })
 
     // Update amenities if provided
