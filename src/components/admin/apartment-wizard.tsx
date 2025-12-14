@@ -732,17 +732,29 @@ export function ApartmentWizard({ mode, apartment, amenities, roomCategories }: 
               </div>
             </div>
 
-            {/* View Public Page (Edit mode only) */}
+            {/* View Preview Page (Edit mode only) */}
             {mode === 'edit' && apartment?.id && (
-              <div className="bg-gray-50 rounded-lg p-4">
+              <div className="bg-gray-50 rounded-lg p-4 space-y-3">
                 <a
-                  href={`/apartments/${apartment.id}`}
+                  href={`/admin/apartments/${apartment.id}/preview`}
                   target="_blank"
                   className="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium"
                 >
                   <LinkIcon className="w-4 h-4 mr-2" />
-                  Öffentliche Seite anzeigen
+                  Vorschau anzeigen
                 </a>
+                {formData.isActive && (
+                  <div>
+                    <a
+                      href={`/apartments/${apartment.id}`}
+                      target="_blank"
+                      className="inline-flex items-center text-green-600 hover:text-green-800 font-medium"
+                    >
+                      <LinkIcon className="w-4 h-4 mr-2" />
+                      Öffentliche Seite (Live)
+                    </a>
+                  </div>
+                )}
               </div>
             )}
           </div>

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { Upload, X, Plus, Image as ImageIcon, GripVertical, Eye, EyeOff, Loader2, Pencil, Check } from 'lucide-react'
+import { Upload, X, Plus, Image as ImageIcon, GripVertical, Eye, EyeOff, Loader2, Pencil, Check, Trash2 } from 'lucide-react'
 
 interface RoomCategory {
   id: string
@@ -52,16 +52,36 @@ export function RoomImageManager({ apartmentId, existingImages, roomCategories }
   const [uploadRoomId, setUploadRoomId] = useState<string>('')
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({})
 
-  // Fetch images on mount
+  // Track current apartmentId to reset state when it changes
+  const [currentApartmentId, setCurrentApartmentId] = useState<string>('')
+
+  // Reset state when apartmentId changes
   useEffect(() => {
-    if (!isInitialized) {
+    if (apartmentId !== currentApartmentId) {
+      // Reset all state for new apartment
+      setImages([])
+      setSelectedRoom('')
+      setUploadingRoom(null)
+      setShowUploadModal(false)
+      setPendingUploads([])
+      setUploadRoomId('')
+      setEditingImageId(null)
+      setEditingAlt('')
+      setCurrentApartmentId(apartmentId)
+      setIsInitialized(false)
+    }
+  }, [apartmentId, currentApartmentId])
+
+  // Fetch images on mount or when apartmentId changes
+  useEffect(() => {
+    if (!isInitialized && apartmentId) {
       if (existingImages && existingImages.length > 0) {
         setImages(existingImages)
       }
       fetchImages()
       setIsInitialized(true)
     }
-  }, [existingImages, isInitialized])
+  }, [apartmentId, existingImages, isInitialized])
 
   const fetchImages = async () => {
     try {
@@ -310,6 +330,36 @@ export function RoomImageManager({ apartmentId, existingImages, roomCategories }
     setShowAddRoom(false)
   }
 
+  // Delete all images from a room
+  const handleDeleteRoomImages = async (roomId: string, roomName: string) => {
+    const roomImages = imagesByRoom[roomId] || []
+    if (roomImages.length === 0) return
+
+    if (!confirm(`Möchten Sie wirklich alle ${roomImages.length} Bilder aus "${roomName}" löschen?`)) {
+      return
+    }
+
+    setIsLoading(true)
+    try {
+      // Delete all images in this room
+      const deletePromises = roomImages
+        .filter(img => img.id)
+        .map(img =>
+          fetch(`/api/admin/apartments/images/${img.id}`, {
+            method: 'DELETE'
+          })
+        )
+
+      await Promise.all(deletePromises)
+      await fetchImages()
+    } catch (error) {
+      console.error('Delete room images error:', error)
+      alert('Fehler beim Löschen der Bilder')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -389,13 +439,23 @@ export function RoomImageManager({ apartmentId, existingImages, roomCategories }
                 </div>
                 <div className="flex items-center gap-2">
                   {hasImages && (
-                    <button
-                      title={hasImages ? "Room visible" : "Room hidden (no images)"}
-                      className="text-gray-400"
-                      disabled
-                    >
-                      {hasImages ? <Eye className="w-4 h-4 text-green-600" /> : <EyeOff className="w-4 h-4" />}
-                    </button>
+                    <>
+                      <button
+                        title="Raum sichtbar"
+                        className="text-gray-400"
+                        disabled
+                      >
+                        <Eye className="w-4 h-4 text-green-600" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteRoomImages(room.id, room.nameDe)}
+                        disabled={isLoading}
+                        className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded transition-colors disabled:opacity-50"
+                        title={`Alle ${roomImages.length} Bilder aus diesem Raum löschen`}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </>
                   )}
                 </div>
               </div>
