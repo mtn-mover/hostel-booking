@@ -127,8 +127,7 @@ model ApartmentImage {
   id          String  @id @default(cuid())
   apartmentId String
   url         String
-  title       String? // Image title (e.g., "Moderne Küche mit Panoramablick")
-  alt         String? // Image description/alt text (e.g., "Kühlschrank, Kaffeemaschine, Mikrowelle")
+  alt         String? // Combined title and description (e.g., "Moderne Küche: Kühlschrank, Kaffeemaschine, Mikrowelle")
   order       Int     @default(0)
   isMain      Boolean @default(false)
   roomId      String? // Reference to room category

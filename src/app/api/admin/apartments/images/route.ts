@@ -86,14 +86,25 @@ export async function POST(request: NextRequest) {
       currentOrder++
 
       // Save to database with base64 data URL
-      // Use provided title and description if available
+      // Combine title and description for alt text until title field is added to schema
+      // Format: "Title: Description" or just "Description" or filename
+      let altText = ''
+      if (title && description) {
+        altText = `${title}: ${description}`
+      } else if (title) {
+        altText = title
+      } else if (description) {
+        altText = description
+      } else {
+        altText = image.name.replace(/\.[^/.]+$/, '')
+      }
+
       const dbImage = await prisma.apartmentImage.create({
         data: {
           apartmentId,
           roomId,
           url: dataUrl,
-          title: title || null,
-          alt: description || image.name.replace(/\.[^/.]+$/, ''),
+          alt: altText,
           order: currentOrder
         }
       })
