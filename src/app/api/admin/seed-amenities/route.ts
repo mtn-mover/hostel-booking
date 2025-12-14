@@ -1,119 +1,119 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
-// Comprehensive Airbnb-style amenities
+// Comprehensive Airbnb-style amenities (no icons - just clean text)
 const amenitiesData = [
   // Scenic Views
-  { name: 'Mountain view', category: 'Scenic Views', icon: 'Mountain' },
-  { name: 'Lake view', category: 'Scenic Views', icon: 'Waves' },
-  { name: 'City view', category: 'Scenic Views', icon: 'Building' },
-  { name: 'Garden view', category: 'Scenic Views', icon: 'TreePine' },
+  { name: 'Mountain view', category: 'Scenic Views' },
+  { name: 'Lake view', category: 'Scenic Views' },
+  { name: 'City view', category: 'Scenic Views' },
+  { name: 'Garden view', category: 'Scenic Views' },
 
   // Bathroom
-  { name: 'Hair dryer', category: 'Bathroom', icon: 'Wind' },
-  { name: 'Shampoo', category: 'Bathroom', icon: 'Droplets' },
-  { name: 'Body wash', category: 'Bathroom', icon: 'Droplets' },
-  { name: 'Hot water', category: 'Bathroom', icon: 'ShowerHead' },
-  { name: 'Shower', category: 'Bathroom', icon: 'ShowerHead' },
-  { name: 'Bathtub', category: 'Bathroom', icon: 'Bath' },
-  { name: 'Cleaning products', category: 'Bathroom', icon: 'Sparkles' },
-  { name: 'Towels', category: 'Bathroom', icon: 'Shirt' },
+  { name: 'Hair dryer', category: 'Bathroom' },
+  { name: 'Shampoo', category: 'Bathroom' },
+  { name: 'Body wash', category: 'Bathroom' },
+  { name: 'Hot water', category: 'Bathroom' },
+  { name: 'Shower', category: 'Bathroom' },
+  { name: 'Bathtub', category: 'Bathroom' },
+  { name: 'Cleaning products', category: 'Bathroom' },
+  { name: 'Towels', category: 'Bathroom' },
 
   // Bedroom & Laundry
-  { name: 'Washer', category: 'Bedroom & Laundry', icon: 'WashingMachine' },
-  { name: 'Dryer', category: 'Bedroom & Laundry', icon: 'Wind' },
-  { name: 'Essentials', category: 'Bedroom & Laundry', icon: 'Package' },
-  { name: 'Bed linens', category: 'Bedroom & Laundry', icon: 'Bed' },
-  { name: 'Extra pillows and blankets', category: 'Bedroom & Laundry', icon: 'Pillow' },
-  { name: 'Hangers', category: 'Bedroom & Laundry', icon: 'Shirt' },
-  { name: 'Iron', category: 'Bedroom & Laundry', icon: 'Iron' },
-  { name: 'Drying rack', category: 'Bedroom & Laundry', icon: 'Shirt' },
-  { name: 'Blackout curtains', category: 'Bedroom & Laundry', icon: 'Moon' },
-  { name: 'Clothing storage', category: 'Bedroom & Laundry', icon: 'HardDrive' },
+  { name: 'Washer', category: 'Bedroom & Laundry' },
+  { name: 'Dryer', category: 'Bedroom & Laundry' },
+  { name: 'Essentials', category: 'Bedroom & Laundry' },
+  { name: 'Bed linens', category: 'Bedroom & Laundry' },
+  { name: 'Extra pillows and blankets', category: 'Bedroom & Laundry' },
+  { name: 'Hangers', category: 'Bedroom & Laundry' },
+  { name: 'Iron', category: 'Bedroom & Laundry' },
+  { name: 'Drying rack', category: 'Bedroom & Laundry' },
+  { name: 'Blackout curtains', category: 'Bedroom & Laundry' },
+  { name: 'Clothing storage', category: 'Bedroom & Laundry' },
 
   // Entertainment
-  { name: 'TV', category: 'Entertainment', icon: 'Tv' },
-  { name: 'Smart TV', category: 'Entertainment', icon: 'Tv' },
-  { name: 'Cable TV', category: 'Entertainment', icon: 'Tv' },
-  { name: 'Sound system', category: 'Entertainment', icon: 'Speaker' },
-  { name: 'Books and reading material', category: 'Entertainment', icon: 'BookOpen' },
-  { name: 'Board games', category: 'Entertainment', icon: 'Gamepad2' },
+  { name: 'TV', category: 'Entertainment' },
+  { name: 'Smart TV', category: 'Entertainment' },
+  { name: 'Cable TV', category: 'Entertainment' },
+  { name: 'Sound system', category: 'Entertainment' },
+  { name: 'Books and reading material', category: 'Entertainment' },
+  { name: 'Board games', category: 'Entertainment' },
 
   // Family
-  { name: 'Crib', category: 'Family', icon: 'Baby' },
-  { name: 'Travel crib', category: 'Family', icon: 'Baby' },
-  { name: 'High chair', category: 'Family', icon: 'Baby' },
-  { name: 'Children toys', category: 'Family', icon: 'Gamepad2' },
-  { name: 'Baby safety gates', category: 'Family', icon: 'Shield' },
-  { name: 'Baby bath', category: 'Family', icon: 'Baby' },
+  { name: 'Crib', category: 'Family' },
+  { name: 'Travel crib', category: 'Family' },
+  { name: 'High chair', category: 'Family' },
+  { name: 'Children toys', category: 'Family' },
+  { name: 'Baby safety gates', category: 'Family' },
+  { name: 'Baby bath', category: 'Family' },
 
   // Heating & Cooling
-  { name: 'Air conditioning', category: 'Heating & Cooling', icon: 'Snowflake' },
-  { name: 'Central heating', category: 'Heating & Cooling', icon: 'Flame' },
-  { name: 'Portable fan', category: 'Heating & Cooling', icon: 'Fan' },
-  { name: 'Fireplace', category: 'Heating & Cooling', icon: 'Flame' },
+  { name: 'Air conditioning', category: 'Heating & Cooling' },
+  { name: 'Central heating', category: 'Heating & Cooling' },
+  { name: 'Portable fan', category: 'Heating & Cooling' },
+  { name: 'Fireplace', category: 'Heating & Cooling' },
 
   // Home Safety
-  { name: 'Smoke alarm', category: 'Home Safety', icon: 'Shield' },
-  { name: 'Carbon monoxide alarm', category: 'Home Safety', icon: 'AlertTriangle' },
-  { name: 'Fire extinguisher', category: 'Home Safety', icon: 'FirstAid' },
-  { name: 'First aid kit', category: 'Home Safety', icon: 'FirstAid' },
-  { name: 'Security cameras', category: 'Home Safety', icon: 'Camera' },
-  { name: 'Safe', category: 'Home Safety', icon: 'Lock' },
+  { name: 'Smoke alarm', category: 'Home Safety' },
+  { name: 'Carbon monoxide alarm', category: 'Home Safety' },
+  { name: 'Fire extinguisher', category: 'Home Safety' },
+  { name: 'First aid kit', category: 'Home Safety' },
+  { name: 'Security cameras', category: 'Home Safety' },
+  { name: 'Safe', category: 'Home Safety' },
 
   // Internet & Office
-  { name: 'WiFi', category: 'Internet & Office', icon: 'Wifi' },
-  { name: 'Dedicated workspace', category: 'Internet & Office', icon: 'Laptop' },
-  { name: 'Printer', category: 'Internet & Office', icon: 'Printer' },
+  { name: 'WiFi', category: 'Internet & Office' },
+  { name: 'Dedicated workspace', category: 'Internet & Office' },
+  { name: 'Printer', category: 'Internet & Office' },
 
   // Kitchen & Dining
-  { name: 'Kitchen', category: 'Kitchen & Dining', icon: 'UtensilsCrossed' },
-  { name: 'Refrigerator', category: 'Kitchen & Dining', icon: 'Refrigerator' },
-  { name: 'Mini fridge', category: 'Kitchen & Dining', icon: 'Refrigerator' },
-  { name: 'Microwave', category: 'Kitchen & Dining', icon: 'Microwave' },
-  { name: 'Oven', category: 'Kitchen & Dining', icon: 'Flame' },
-  { name: 'Stove', category: 'Kitchen & Dining', icon: 'Flame' },
-  { name: 'Dishwasher', category: 'Kitchen & Dining', icon: 'Sparkles' },
-  { name: 'Coffee maker', category: 'Kitchen & Dining', icon: 'Coffee' },
-  { name: 'Kettle', category: 'Kitchen & Dining', icon: 'Zap' },
-  { name: 'Toaster', category: 'Kitchen & Dining', icon: 'Sandwich' },
-  { name: 'Cooking basics', category: 'Kitchen & Dining', icon: 'CookingPot' },
-  { name: 'Dishes and silverware', category: 'Kitchen & Dining', icon: 'Utensils' },
-  { name: 'Wine glasses', category: 'Kitchen & Dining', icon: 'Wine' },
-  { name: 'Dining table', category: 'Kitchen & Dining', icon: 'Utensils' },
-  { name: 'Rice cooker', category: 'Kitchen & Dining', icon: 'CookingPot' },
-  { name: 'Baking sheet', category: 'Kitchen & Dining', icon: 'CookingPot' },
+  { name: 'Kitchen', category: 'Kitchen & Dining' },
+  { name: 'Refrigerator', category: 'Kitchen & Dining' },
+  { name: 'Mini fridge', category: 'Kitchen & Dining' },
+  { name: 'Microwave', category: 'Kitchen & Dining' },
+  { name: 'Oven', category: 'Kitchen & Dining' },
+  { name: 'Stove', category: 'Kitchen & Dining' },
+  { name: 'Dishwasher', category: 'Kitchen & Dining' },
+  { name: 'Coffee maker', category: 'Kitchen & Dining' },
+  { name: 'Kettle', category: 'Kitchen & Dining' },
+  { name: 'Toaster', category: 'Kitchen & Dining' },
+  { name: 'Cooking basics', category: 'Kitchen & Dining' },
+  { name: 'Dishes and silverware', category: 'Kitchen & Dining' },
+  { name: 'Wine glasses', category: 'Kitchen & Dining' },
+  { name: 'Dining table', category: 'Kitchen & Dining' },
+  { name: 'Rice cooker', category: 'Kitchen & Dining' },
+  { name: 'Baking sheet', category: 'Kitchen & Dining' },
 
   // Location Features
-  { name: 'Private entrance', category: 'Location Features', icon: 'DoorOpen' },
-  { name: 'Ground floor access', category: 'Location Features', icon: 'Building' },
+  { name: 'Private entrance', category: 'Location Features' },
+  { name: 'Ground floor access', category: 'Location Features' },
 
   // Outdoor
-  { name: 'Balcony', category: 'Outdoor', icon: 'Sun' },
-  { name: 'Patio', category: 'Outdoor', icon: 'Sun' },
-  { name: 'Terrace', category: 'Outdoor', icon: 'Sun' },
-  { name: 'Garden', category: 'Outdoor', icon: 'TreePine' },
-  { name: 'Private courtyard', category: 'Outdoor', icon: 'TreePine' },
-  { name: 'Outdoor furniture', category: 'Outdoor', icon: 'Armchair' },
-  { name: 'BBQ grill', category: 'Outdoor', icon: 'Flame' },
-  { name: 'Pool', category: 'Outdoor', icon: 'Waves' },
+  { name: 'Balcony', category: 'Outdoor' },
+  { name: 'Patio', category: 'Outdoor' },
+  { name: 'Terrace', category: 'Outdoor' },
+  { name: 'Garden', category: 'Outdoor' },
+  { name: 'Private courtyard', category: 'Outdoor' },
+  { name: 'Outdoor furniture', category: 'Outdoor' },
+  { name: 'BBQ grill', category: 'Outdoor' },
+  { name: 'Pool', category: 'Outdoor' },
 
   // Parking & Access
-  { name: 'Free parking', category: 'Parking & Access', icon: 'Car' },
-  { name: 'Paid parking', category: 'Parking & Access', icon: 'ParkingCircle' },
-  { name: 'Garage', category: 'Parking & Access', icon: 'Car' },
-  { name: 'Elevator', category: 'Parking & Access', icon: 'ArrowUpDown' },
-  { name: 'Single level home', category: 'Parking & Access', icon: 'Building' },
+  { name: 'Free parking', category: 'Parking & Access' },
+  { name: 'Paid parking', category: 'Parking & Access' },
+  { name: 'Garage', category: 'Parking & Access' },
+  { name: 'Elevator', category: 'Parking & Access' },
+  { name: 'Single level home', category: 'Parking & Access' },
 
   // Services
-  { name: 'Self check-in', category: 'Services', icon: 'KeyRound' },
-  { name: 'Keypad', category: 'Services', icon: 'Key' },
-  { name: 'Lockbox', category: 'Services', icon: 'Lock' },
-  { name: 'Luggage storage', category: 'Services', icon: 'Package' },
-  { name: 'Long term stays allowed', category: 'Services', icon: 'Clock' },
+  { name: 'Self check-in', category: 'Services' },
+  { name: 'Keypad', category: 'Services' },
+  { name: 'Lockbox', category: 'Services' },
+  { name: 'Luggage storage', category: 'Services' },
+  { name: 'Long term stays allowed', category: 'Services' },
 
   // Pets
-  { name: 'Pets allowed', category: 'Pets', icon: 'Dog' },
+  { name: 'Pets allowed', category: 'Pets' },
 ]
 
 export async function POST() {
@@ -131,7 +131,7 @@ export async function POST() {
           where: { name: amenity.name },
           data: {
             category: amenity.category,
-            icon: amenity.icon,
+            icon: null,
           }
         })
         updated++
@@ -140,7 +140,7 @@ export async function POST() {
           data: {
             name: amenity.name,
             category: amenity.category,
-            icon: amenity.icon,
+            icon: null,
           }
         })
         created++
@@ -181,7 +181,7 @@ export async function GET(request: Request) {
             where: { name: amenity.name },
             data: {
               category: amenity.category,
-              icon: amenity.icon,
+              icon: null,
             }
           })
           updated++
@@ -190,7 +190,7 @@ export async function GET(request: Request) {
             data: {
               name: amenity.name,
               category: amenity.category,
-              icon: amenity.icon,
+              icon: null,
             }
           })
           created++

@@ -33,18 +33,34 @@ export async function POST(request: NextRequest) {
   try {
     const data = await request.json()
 
-    // Parse numeric values to ensure correct types
-    const price = parseFloat(data.price) || 0
-    const cleaningFee = parseFloat(data.cleaningFee) || 0
-    const maxGuests = parseInt(data.maxGuests) || 2
-    const bedrooms = parseInt(data.bedrooms) || 1
-    const beds = parseInt(data.beds) || 1
-    const bathrooms = parseFloat(data.bathrooms) || 1
-    const size = data.size ? parseFloat(data.size) : null
-    const latitude = data.latitude ? parseFloat(data.latitude) : null
-    const longitude = data.longitude ? parseFloat(data.longitude) : null
-    const minStayNights = parseInt(data.minStayNights) || 1
-    const maxStayNights = data.maxStayNights ? parseInt(data.maxStayNights) : null
+    // Log incoming data for debugging
+    console.log('Creating apartment with data:', JSON.stringify(data, null, 2))
+
+    // Parse numeric values to ensure correct types for PostgreSQL
+    // IMPORTANT: All values must be proper numbers, not strings or NaN
+    const price = Number(data.price) || 0
+    const cleaningFee = Number(data.cleaningFee) || 0
+    const maxGuests = Math.floor(Number(data.maxGuests)) || 2
+    const bedrooms = Math.floor(Number(data.bedrooms)) || 1
+    const beds = Math.floor(Number(data.beds)) || 1
+    const bathrooms = Number(data.bathrooms) || 1
+    const size = data.size ? Math.floor(Number(data.size)) : null
+    const latitude = data.latitude ? Number(data.latitude) : null
+    const longitude = data.longitude ? Number(data.longitude) : null
+    const minStayNights = Math.floor(Number(data.minStayNights)) || 1
+    const maxStayNights = data.maxStayNights ? Math.floor(Number(data.maxStayNights)) : null
+
+    // Validate that numbers are not NaN
+    if (isNaN(price) || isNaN(cleaningFee) || isNaN(maxGuests) || isNaN(bedrooms) ||
+        isNaN(beds) || isNaN(bathrooms) || isNaN(minStayNights)) {
+      console.error('Invalid numeric values:', { price, cleaningFee, maxGuests, bedrooms, beds, bathrooms, minStayNights })
+      return NextResponse.json(
+        { error: 'Invalid numeric values', message: 'Bitte überprüfen Sie die Zahlenwerte' },
+        { status: 400 }
+      )
+    }
+
+    console.log('Parsed values:', { price, cleaningFee, maxGuests, bedrooms, beds, bathrooms, size, minStayNights, maxStayNights })
 
     // Create the apartment with only fields that exist in schema
     const apartment = await prisma.apartment.create({

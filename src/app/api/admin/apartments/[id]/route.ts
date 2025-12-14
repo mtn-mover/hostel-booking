@@ -66,15 +66,15 @@ export async function PUT(request: NextRequest, { params }: Props) {
     if (apartmentData.theSpace !== undefined) updateData.theSpace = apartmentData.theSpace || null
     if (apartmentData.guestAccess !== undefined) updateData.guestAccess = apartmentData.guestAccess || null
     if (apartmentData.otherNotes !== undefined) updateData.otherNotes = apartmentData.otherNotes || null
-    if (apartmentData.maxGuests !== undefined) updateData.maxGuests = parseInt(apartmentData.maxGuests) || 2
-    if (apartmentData.bedrooms !== undefined) updateData.bedrooms = parseInt(apartmentData.bedrooms) || 1
-    if (apartmentData.beds !== undefined) updateData.beds = parseInt(apartmentData.beds) || 1
+    if (apartmentData.maxGuests !== undefined) updateData.maxGuests = parseInt(apartmentData.maxGuests, 10) || 2
+    if (apartmentData.bedrooms !== undefined) updateData.bedrooms = parseInt(apartmentData.bedrooms, 10) || 1
+    if (apartmentData.beds !== undefined) updateData.beds = parseInt(apartmentData.beds, 10) || 1
     if (apartmentData.bathrooms !== undefined) updateData.bathrooms = parseFloat(apartmentData.bathrooms) || 1
-    if (apartmentData.size !== undefined) updateData.size = apartmentData.size ? parseFloat(apartmentData.size) : null
+    if (apartmentData.size !== undefined) updateData.size = apartmentData.size ? parseInt(apartmentData.size, 10) : null // Int in schema!
     if (apartmentData.price !== undefined) updateData.price = parseFloat(apartmentData.price) || 0
     if (apartmentData.cleaningFee !== undefined) updateData.cleaningFee = parseFloat(apartmentData.cleaningFee) || 0
-    if (apartmentData.minStayNights !== undefined) updateData.minStayNights = parseInt(apartmentData.minStayNights) || 1
-    if (apartmentData.maxStayNights !== undefined) updateData.maxStayNights = apartmentData.maxStayNights ? parseInt(apartmentData.maxStayNights) : null
+    if (apartmentData.minStayNights !== undefined) updateData.minStayNights = parseInt(apartmentData.minStayNights, 10) || 1
+    if (apartmentData.maxStayNights !== undefined) updateData.maxStayNights = apartmentData.maxStayNights ? parseInt(apartmentData.maxStayNights, 10) : null
     if (apartmentData.address !== undefined) updateData.address = apartmentData.address || null
     if (apartmentData.city !== undefined) updateData.city = apartmentData.city
     if (apartmentData.country !== undefined) updateData.country = apartmentData.country
