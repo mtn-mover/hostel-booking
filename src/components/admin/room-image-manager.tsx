@@ -24,6 +24,7 @@ interface ApartmentImage {
 interface PendingUpload {
   file: File
   preview: string
+  title: string
   description: string
 }
 
@@ -96,6 +97,7 @@ export function RoomImageManager({ apartmentId, existingImages, roomCategories }
       newPendingUploads.push({
         file,
         preview: URL.createObjectURL(file),
+        title: '',
         description: ''
       })
     }
@@ -108,6 +110,13 @@ export function RoomImageManager({ apartmentId, existingImages, roomCategories }
       setUploadRoomId(roomId)
       setShowUploadModal(true)
     }
+  }
+
+  // Update title for a pending upload
+  const updatePendingTitle = (index: number, title: string) => {
+    setPendingUploads(prev => prev.map((upload, i) =>
+      i === index ? { ...upload, title } : upload
+    ))
   }
 
   // Update description for a pending upload
@@ -153,8 +162,10 @@ export function RoomImageManager({ apartmentId, existingImages, roomCategories }
       formData.append('images', upload.file)
     })
 
-    // Add descriptions as JSON array
+    // Add titles and descriptions as JSON arrays
+    const titles = pendingUploads.map(upload => upload.title)
     const descriptions = pendingUploads.map(upload => upload.description)
+    formData.append('titles', JSON.stringify(titles))
     formData.append('descriptions', JSON.stringify(descriptions))
 
     try {
@@ -591,19 +602,33 @@ export function RoomImageManager({ apartmentId, existingImages, roomCategories }
                       </button>
                     </div>
 
-                    {/* Description Input */}
-                    <div className="flex-1">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Beschreibung (optional)
-                      </label>
-                      <textarea
-                        value={upload.description}
-                        onChange={(e) => updatePendingDescription(index, e.target.value)}
-                        placeholder="z.B. Kühlschrank, Kaffeemaschine, Mikrowelle, Toaster..."
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm resize-none"
-                        rows={2}
-                      />
-                      <p className="text-xs text-gray-400 mt-1">
+                    {/* Title and Description Inputs */}
+                    <div className="flex-1 space-y-3">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Titel (optional)
+                        </label>
+                        <input
+                          type="text"
+                          value={upload.title}
+                          onChange={(e) => updatePendingTitle(index, e.target.value)}
+                          placeholder="z.B. Moderne Küche mit Panoramablick"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Beschreibung (optional)
+                        </label>
+                        <textarea
+                          value={upload.description}
+                          onChange={(e) => updatePendingDescription(index, e.target.value)}
+                          placeholder="z.B. Kühlschrank, Kaffeemaschine, Mikrowelle, Toaster..."
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm resize-none"
+                          rows={2}
+                        />
+                      </div>
+                      <p className="text-xs text-gray-400">
                         {upload.file.name} ({(upload.file.size / 1024 / 1024).toFixed(2)} MB)
                       </p>
                     </div>

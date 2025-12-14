@@ -18,7 +18,18 @@ export async function POST(request: NextRequest) {
     const apartmentId = formData.get('apartmentId') as string
     const roomId = formData.get('roomId') as string
     const images = formData.getAll('images') as File[]
+    const titlesJson = formData.get('titles') as string | null
     const descriptionsJson = formData.get('descriptions') as string | null
+
+    // Parse titles array if provided
+    let titles: string[] = []
+    if (titlesJson) {
+      try {
+        titles = JSON.parse(titlesJson)
+      } catch (e) {
+        console.log('Failed to parse titles:', e)
+      }
+    }
 
     // Parse descriptions array if provided
     let descriptions: string[] = []
@@ -53,6 +64,7 @@ export async function POST(request: NextRequest) {
 
     for (let i = 0; i < images.length; i++) {
       const image = images[i]
+      const title = titles[i] || ''
       const description = descriptions[i] || ''
 
       // Convert to base64
@@ -61,7 +73,7 @@ export async function POST(request: NextRequest) {
 
       // Convert AVIF and other formats to JPEG for better compatibility
       let mimeType = image.type || 'image/jpeg'
-      let base64 = buffer.toString('base64')
+      const base64 = buffer.toString('base64')
 
       // For AVIF, WEBP, or very large images, use JPEG format
       if (mimeType === 'image/avif' || mimeType === 'image/webp' || buffer.length > 500000) {
@@ -74,12 +86,13 @@ export async function POST(request: NextRequest) {
       currentOrder++
 
       // Save to database with base64 data URL
-      // Use provided description if available, otherwise use filename
+      // Use provided title and description if available
       const dbImage = await prisma.apartmentImage.create({
         data: {
           apartmentId,
           roomId,
           url: dataUrl,
+          title: title || null,
           alt: description || image.name.replace(/\.[^/.]+$/, ''),
           order: currentOrder
         }
