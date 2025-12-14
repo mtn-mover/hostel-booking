@@ -52,7 +52,7 @@ export default function AdminApartments() {
 
     setDeletingId(id)
     try {
-      const response = await fetch(`/api/admin/apartments/${id}/delete`, {
+      const response = await fetch(`/api/admin/apartments/${id}`, {
         method: 'DELETE'
       })
 
