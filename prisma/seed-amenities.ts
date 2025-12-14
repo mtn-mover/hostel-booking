@@ -2,82 +2,82 @@ import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
-// Comprehensive list of Airbnb-style amenities organized by category
+// Comprehensive list of Airbnb-style amenities organized by category (German)
 const amenitiesData = [
-  // Basic
-  { name: 'WLAN', category: 'Basic', icon: '📶' },
-  { name: 'TV', category: 'Basic', icon: '📺' },
-  { name: 'Küche', category: 'Basic', icon: '🍳' },
-  { name: 'Waschmaschine', category: 'Basic', icon: '🧺' },
-  { name: 'Kostenlose Parkplätze', category: 'Basic', icon: '🚗' },
-  { name: 'Kostenpflichtige Parkplätze', category: 'Basic', icon: '🅿️' },
-  { name: 'Klimaanlage', category: 'Basic', icon: '❄️' },
-  { name: 'Arbeitsplatz', category: 'Basic', icon: '💼' },
-  
-  // Bedroom & Laundry
-  { name: 'Bettwäsche', category: 'Bedroom', icon: '🛏️' },
-  { name: 'Kleiderbügel', category: 'Bedroom', icon: '👔' },
-  { name: 'Zusätzliche Kissen und Decken', category: 'Bedroom', icon: '🛌' },
-  { name: 'Verdunkelungsvorhänge', category: 'Bedroom', icon: '🌙' },
-  { name: 'Bügeleisen', category: 'Bedroom', icon: '👕' },
-  { name: 'Wäschetrockner', category: 'Bedroom', icon: '🌀' },
-  
-  // Bathroom
-  { name: 'Haartrockner', category: 'Bathroom', icon: '💨' },
-  { name: 'Shampoo', category: 'Bathroom', icon: '🧴' },
-  { name: 'Duschgel', category: 'Bathroom', icon: '🧼' },
-  { name: 'Heißes Wasser', category: 'Bathroom', icon: '🚿' },
-  { name: 'Handtücher', category: 'Bathroom', icon: '🏖️' },
-  { name: 'Seife', category: 'Bathroom', icon: '🧼' },
-  { name: 'Toilettenpapier', category: 'Bathroom', icon: '🧻' },
-  { name: 'Badewanne', category: 'Bathroom', icon: '🛁' },
-  
-  // Kitchen & Dining
-  { name: 'Kühlschrank', category: 'Kitchen', icon: '❄️' },
-  { name: 'Mikrowelle', category: 'Kitchen', icon: '📦' },
-  { name: 'Kochutensilien', category: 'Kitchen', icon: '🍴' },
-  { name: 'Geschirr und Besteck', category: 'Kitchen', icon: '🍽️' },
-  { name: 'Geschirrspüler', category: 'Kitchen', icon: '🍽️' },
-  { name: 'Herd', category: 'Kitchen', icon: '🔥' },
-  { name: 'Backofen', category: 'Kitchen', icon: '🥧' },
-  { name: 'Kaffeemaschine', category: 'Kitchen', icon: '☕' },
-  { name: 'Wasserkocher', category: 'Kitchen', icon: '🫖' },
-  { name: 'Weingläser', category: 'Kitchen', icon: '🍷' },
-  { name: 'Toaster', category: 'Kitchen', icon: '🍞' },
-  { name: 'Esstisch', category: 'Kitchen', icon: '🪑' },
-  
-  // Entertainment
-  { name: 'Pool', category: 'Entertainment', icon: '🏊' },
-  { name: 'Whirlpool', category: 'Entertainment', icon: '💆' },
-  { name: 'Grill', category: 'Entertainment', icon: '🍖' },
-  { name: 'Außenbereich zum Essen', category: 'Entertainment', icon: '🌳' },
-  { name: 'Feuerstelle', category: 'Entertainment', icon: '🔥' },
-  { name: 'Billardtisch', category: 'Entertainment', icon: '🎱' },
-  { name: 'Indoor-Kamin', category: 'Entertainment', icon: '🔥' },
-  { name: 'Spielkonsole', category: 'Entertainment', icon: '🎮' },
-  { name: 'Klavier', category: 'Entertainment', icon: '🎹' },
-  { name: 'Fitnessraum', category: 'Entertainment', icon: '💪' },
-  { name: 'Sauna', category: 'Entertainment', icon: '🧖' },
-  
-  // Family Features
-  { name: 'Kinderbett', category: 'Family', icon: '👶' },
-  { name: 'Hochstuhl', category: 'Family', icon: '🪑' },
-  { name: 'Kindersicherung an Treppen', category: 'Family', icon: '🚸' },
-  { name: 'Kinderspielzeug', category: 'Family', icon: '🧸' },
-  { name: 'Kinderbücher', category: 'Family', icon: '📚' },
-  { name: 'Babybadewanne', category: 'Family', icon: '🛁' },
-  { name: 'Wickeltisch', category: 'Family', icon: '👶' },
-  { name: 'Steckdosenschutz', category: 'Family', icon: '🔌' },
-  
-  // Safety & Security
-  { name: 'Rauchmelder', category: 'Safety', icon: '🚨' },
-  { name: 'Kohlenmonoxidmelder', category: 'Safety', icon: '⚠️' },
-  { name: 'Feuerlöscher', category: 'Safety', icon: '🧯' },
-  { name: 'Erste-Hilfe-Set', category: 'Safety', icon: '🏥' },
-  { name: 'Safe', category: 'Safety', icon: '🔐' },
-  { name: 'Schloss am Schlafzimmer', category: 'Safety', icon: '🔒' },
-  
-  // Services
+  // Grundausstattung
+  { name: 'WLAN', category: 'Grundausstattung', icon: '📶' },
+  { name: 'TV', category: 'Grundausstattung', icon: '📺' },
+  { name: 'Küche', category: 'Grundausstattung', icon: '🍳' },
+  { name: 'Waschmaschine', category: 'Grundausstattung', icon: '🧺' },
+  { name: 'Kostenlose Parkplätze', category: 'Grundausstattung', icon: '🚗' },
+  { name: 'Kostenpflichtige Parkplätze', category: 'Grundausstattung', icon: '🅿️' },
+  { name: 'Klimaanlage', category: 'Grundausstattung', icon: '❄️' },
+  { name: 'Arbeitsplatz', category: 'Grundausstattung', icon: '💼' },
+
+  // Schlafzimmer & Wäsche
+  { name: 'Bettwäsche', category: 'Schlafzimmer', icon: '🛏️' },
+  { name: 'Kleiderbügel', category: 'Schlafzimmer', icon: '👔' },
+  { name: 'Zusätzliche Kissen und Decken', category: 'Schlafzimmer', icon: '🛌' },
+  { name: 'Verdunkelungsvorhänge', category: 'Schlafzimmer', icon: '🌙' },
+  { name: 'Bügeleisen', category: 'Schlafzimmer', icon: '👕' },
+  { name: 'Wäschetrockner', category: 'Schlafzimmer', icon: '🌀' },
+
+  // Badezimmer
+  { name: 'Haartrockner', category: 'Badezimmer', icon: '💨' },
+  { name: 'Shampoo', category: 'Badezimmer', icon: '🧴' },
+  { name: 'Duschgel', category: 'Badezimmer', icon: '🧼' },
+  { name: 'Heisses Wasser', category: 'Badezimmer', icon: '🚿' },
+  { name: 'Handtücher', category: 'Badezimmer', icon: '🏖️' },
+  { name: 'Seife', category: 'Badezimmer', icon: '🧼' },
+  { name: 'Toilettenpapier', category: 'Badezimmer', icon: '🧻' },
+  { name: 'Badewanne', category: 'Badezimmer', icon: '🛁' },
+
+  // Küche & Essbereich
+  { name: 'Kühlschrank', category: 'Küche & Essbereich', icon: '❄️' },
+  { name: 'Mikrowelle', category: 'Küche & Essbereich', icon: '📦' },
+  { name: 'Kochutensilien', category: 'Küche & Essbereich', icon: '🍴' },
+  { name: 'Geschirr und Besteck', category: 'Küche & Essbereich', icon: '🍽️' },
+  { name: 'Geschirrspüler', category: 'Küche & Essbereich', icon: '🍽️' },
+  { name: 'Herd', category: 'Küche & Essbereich', icon: '🔥' },
+  { name: 'Backofen', category: 'Küche & Essbereich', icon: '🥧' },
+  { name: 'Kaffeemaschine', category: 'Küche & Essbereich', icon: '☕' },
+  { name: 'Wasserkocher', category: 'Küche & Essbereich', icon: '🫖' },
+  { name: 'Weingläser', category: 'Küche & Essbereich', icon: '🍷' },
+  { name: 'Toaster', category: 'Küche & Essbereich', icon: '🍞' },
+  { name: 'Esstisch', category: 'Küche & Essbereich', icon: '🪑' },
+
+  // Unterhaltung & Freizeit
+  { name: 'Pool', category: 'Unterhaltung', icon: '🏊' },
+  { name: 'Whirlpool', category: 'Unterhaltung', icon: '💆' },
+  { name: 'Grill', category: 'Unterhaltung', icon: '🍖' },
+  { name: 'Aussenbereich zum Essen', category: 'Unterhaltung', icon: '🌳' },
+  { name: 'Feuerstelle', category: 'Unterhaltung', icon: '🔥' },
+  { name: 'Billardtisch', category: 'Unterhaltung', icon: '🎱' },
+  { name: 'Indoor-Kamin', category: 'Unterhaltung', icon: '🔥' },
+  { name: 'Spielkonsole', category: 'Unterhaltung', icon: '🎮' },
+  { name: 'Klavier', category: 'Unterhaltung', icon: '🎹' },
+  { name: 'Fitnessraum', category: 'Unterhaltung', icon: '💪' },
+  { name: 'Sauna', category: 'Unterhaltung', icon: '🧖' },
+
+  // Familie & Kinder
+  { name: 'Kinderbett', category: 'Familie', icon: '👶' },
+  { name: 'Hochstuhl', category: 'Familie', icon: '🪑' },
+  { name: 'Kindersicherung an Treppen', category: 'Familie', icon: '🚸' },
+  { name: 'Kinderspielzeug', category: 'Familie', icon: '🧸' },
+  { name: 'Kinderbücher', category: 'Familie', icon: '📚' },
+  { name: 'Babybadewanne', category: 'Familie', icon: '🛁' },
+  { name: 'Wickeltisch', category: 'Familie', icon: '👶' },
+  { name: 'Steckdosenschutz', category: 'Familie', icon: '🔌' },
+
+  // Sicherheit
+  { name: 'Rauchmelder', category: 'Sicherheit', icon: '🚨' },
+  { name: 'Kohlenmonoxidmelder', category: 'Sicherheit', icon: '⚠️' },
+  { name: 'Feuerlöscher', category: 'Sicherheit', icon: '🧯' },
+  { name: 'Erste-Hilfe-Set', category: 'Sicherheit', icon: '🏥' },
+  { name: 'Safe', category: 'Sicherheit', icon: '🔐' },
+  { name: 'Schloss am Schlafzimmer', category: 'Sicherheit', icon: '🔒' },
+
+  // Services & Regeln
   { name: 'Selbst-Check-in', category: 'Services', icon: '🔑' },
   { name: 'Gepäckaufbewahrung', category: 'Services', icon: '🧳' },
   { name: 'Reinigung vor Check-out', category: 'Services', icon: '🧹' },
@@ -85,39 +85,39 @@ const amenitiesData = [
   { name: 'Haustiere erlaubt', category: 'Services', icon: '🐕' },
   { name: 'Rauchen erlaubt', category: 'Services', icon: '🚬' },
   { name: 'Veranstaltungen erlaubt', category: 'Services', icon: '🎉' },
-  
-  // Location Features
-  { name: 'Strandnähe', category: 'Location', icon: '🏖️' },
-  { name: 'Seeblick', category: 'Location', icon: '🌊' },
-  { name: 'Bergblick', category: 'Location', icon: '⛰️' },
-  { name: 'Stadtzentrum', category: 'Location', icon: '🏙️' },
-  { name: 'Öffentliche Verkehrsmittel', category: 'Location', icon: '🚌' },
-  { name: 'Bahnhofsnähe', category: 'Location', icon: '🚂' },
-  { name: 'Skilift-Zugang', category: 'Location', icon: '🎿' },
-  { name: 'Balkon', category: 'Location', icon: '🏠' },
-  { name: 'Terrasse', category: 'Location', icon: '🌿' },
-  { name: 'Garten', category: 'Location', icon: '🌳' },
-  { name: 'Privater Eingang', category: 'Location', icon: '🚪' },
-  
-  // Accessibility
-  { name: 'Rollstuhlgerecht', category: 'Accessibility', icon: '♿' },
-  { name: 'Aufzug', category: 'Accessibility', icon: '🛗' },
-  { name: 'Ebenerdige Dusche', category: 'Accessibility', icon: '🚿' },
-  { name: 'Breite Türen', category: 'Accessibility', icon: '🚪' },
-  { name: 'Haltegriffe im Bad', category: 'Accessibility', icon: '🤝' },
-  
-  // Connectivity
-  { name: 'Ethernet-Anschluss', category: 'Connectivity', icon: '🔌' },
-  { name: 'Schnelles WLAN', category: 'Connectivity', icon: '📶' },
-  { name: 'Smart TV', category: 'Connectivity', icon: '📺' },
-  { name: 'Netflix', category: 'Connectivity', icon: '🎬' },
-  { name: 'Amazon Prime Video', category: 'Connectivity', icon: '📽️' },
-  
-  // Climate Control
-  { name: 'Heizung', category: 'Climate', icon: '🔥' },
-  { name: 'Fußbodenheizung', category: 'Climate', icon: '♨️' },
-  { name: 'Ventilator', category: 'Climate', icon: '💨' },
-  { name: 'Tragbare Heizung', category: 'Climate', icon: '🔥' },
+
+  // Lage & Aussenbereich
+  { name: 'Strandnähe', category: 'Lage & Aussenbereich', icon: '🏖️' },
+  { name: 'Seeblick', category: 'Lage & Aussenbereich', icon: '🌊' },
+  { name: 'Bergblick', category: 'Lage & Aussenbereich', icon: '⛰️' },
+  { name: 'Stadtzentrum', category: 'Lage & Aussenbereich', icon: '🏙️' },
+  { name: 'Öffentliche Verkehrsmittel', category: 'Lage & Aussenbereich', icon: '🚌' },
+  { name: 'Bahnhofsnähe', category: 'Lage & Aussenbereich', icon: '🚂' },
+  { name: 'Skilift-Zugang', category: 'Lage & Aussenbereich', icon: '🎿' },
+  { name: 'Balkon', category: 'Lage & Aussenbereich', icon: '🏠' },
+  { name: 'Terrasse', category: 'Lage & Aussenbereich', icon: '🌿' },
+  { name: 'Garten', category: 'Lage & Aussenbereich', icon: '🌳' },
+  { name: 'Privater Eingang', category: 'Lage & Aussenbereich', icon: '🚪' },
+
+  // Barrierefreiheit
+  { name: 'Rollstuhlgerecht', category: 'Barrierefreiheit', icon: '♿' },
+  { name: 'Aufzug', category: 'Barrierefreiheit', icon: '🛗' },
+  { name: 'Ebenerdige Dusche', category: 'Barrierefreiheit', icon: '🚿' },
+  { name: 'Breite Türen', category: 'Barrierefreiheit', icon: '🚪' },
+  { name: 'Haltegriffe im Bad', category: 'Barrierefreiheit', icon: '🤝' },
+
+  // Internet & Multimedia
+  { name: 'Ethernet-Anschluss', category: 'Internet & Multimedia', icon: '🔌' },
+  { name: 'Schnelles WLAN', category: 'Internet & Multimedia', icon: '📶' },
+  { name: 'Smart TV', category: 'Internet & Multimedia', icon: '📺' },
+  { name: 'Netflix', category: 'Internet & Multimedia', icon: '🎬' },
+  { name: 'Amazon Prime Video', category: 'Internet & Multimedia', icon: '📽️' },
+
+  // Heizung & Klima
+  { name: 'Heizung', category: 'Heizung & Klima', icon: '🔥' },
+  { name: 'Fussbodenheizung', category: 'Heizung & Klima', icon: '♨️' },
+  { name: 'Ventilator', category: 'Heizung & Klima', icon: '💨' },
+  { name: 'Tragbare Heizung', category: 'Heizung & Klima', icon: '🔥' },
 ]
 
 async function main() {

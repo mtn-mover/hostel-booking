@@ -112,6 +112,8 @@ export function ApartmentWizard({ mode, apartment, amenities, roomCategories }: 
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
+  const [showImagePrompt, setShowImagePrompt] = useState(false)
+  const [savedApartmentId, setSavedApartmentId] = useState<string | null>(null)
 
   // Use different steps based on mode
   const STEPS = mode === 'create' ? STEPS_CREATE : STEPS_EDIT
@@ -267,10 +269,9 @@ export function ApartmentWizard({ mode, apartment, amenities, roomCategories }: 
       setSuccess('Apartment erfolgreich gespeichert!')
 
       if (mode === 'create') {
-        // Redirect to edit page for the new apartment
-        setTimeout(() => {
-          router.push(`/admin/apartments/${result.id}`)
-        }, 1500)
+        // Show prompt to upload images
+        setSavedApartmentId(result.id)
+        setShowImagePrompt(true)
       } else {
         router.refresh()
         setTimeout(() => setSuccess(null), 3000)
@@ -901,6 +902,58 @@ export function ApartmentWizard({ mode, apartment, amenities, roomCategories }: 
       {hasUnsavedChanges && mode === 'edit' && (
         <div className="mt-4 text-center text-sm text-amber-600">
           Sie haben ungespeicherte Änderungen
+        </div>
+      )}
+
+      {/* Image Upload Prompt Modal */}
+      {showImagePrompt && savedApartmentId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 p-6">
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Check className="w-8 h-8 text-green-600" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">
+                Apartment erfolgreich erstellt!
+              </h3>
+              <p className="text-gray-600">
+                Möchten Sie jetzt Bilder für das Apartment hochladen?
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <button
+                onClick={() => {
+                  setShowImagePrompt(false)
+                  router.push(`/admin/apartments/${savedApartmentId}/images`)
+                }}
+                className="w-full flex items-center justify-center px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
+              >
+                <ImageIcon className="w-5 h-5 mr-2" />
+                Ja, Bilder hochladen
+              </button>
+
+              <button
+                onClick={() => {
+                  setShowImagePrompt(false)
+                  router.push(`/admin/apartments/${savedApartmentId}`)
+                }}
+                className="w-full flex items-center justify-center px-6 py-3 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+              >
+                Später, zum Apartment
+              </button>
+
+              <button
+                onClick={() => {
+                  setShowImagePrompt(false)
+                  router.push('/admin/apartments')
+                }}
+                className="w-full text-sm text-gray-500 hover:text-gray-700 py-2"
+              >
+                Zur Übersicht
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
