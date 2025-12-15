@@ -98,6 +98,9 @@ export async function PUT(request: NextRequest, { params }: Props) {
     const bookingHorizon = apartmentData.bookingHorizon !== undefined
       ? (apartmentData.bookingHorizon ? String(apartmentData.bookingHorizon) : null)
       : currentApartment.bookingHorizon
+    const selectedRoomIds = apartmentData.selectedRoomIds !== undefined
+      ? JSON.stringify(apartmentData.selectedRoomIds)
+      : currentApartment.selectedRoomIds
 
     // Integer fields
     let maxGuests = currentApartment.maxGuests
@@ -213,8 +216,9 @@ export async function PUT(request: NextRequest, { params }: Props) {
         "airbnbId" = $22,
         "airbnbUrl" = $23,
         "bookingHorizon" = $24,
+        "selectedRoomIds" = $25,
         "updatedAt" = NOW()
-      WHERE "id" = $25
+      WHERE "id" = $26
     `,
       title, description, shortDescription,
       theSpace, guestAccess, otherNotes,
@@ -224,7 +228,7 @@ export async function PUT(request: NextRequest, { params }: Props) {
       latitude, longitude,
       minStayNights, maxStayNights, isActive,
       airbnbId, airbnbUrl, bookingHorizon,
-      id
+      selectedRoomIds, id
     )
 
     // Get updated apartment

@@ -107,6 +107,7 @@ model Apartment {
   // JSON fields for complex data
   images           String    @default("[]") // JSON array of image URLs
   amenities        String    @default("[]") // JSON array of amenity names
+  selectedRoomIds  String    @default("[]") // JSON array of selected room category IDs
   
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt

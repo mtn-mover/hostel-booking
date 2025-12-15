@@ -109,6 +109,7 @@ export async function POST(request: NextRequest) {
     const isActive = Boolean(data.isActive ?? false)
     const airbnbId = data.airbnbId ? String(data.airbnbId) : null
     const airbnbUrl = data.airbnbUrl ? String(data.airbnbUrl) : null
+    const selectedRoomIds = Array.isArray(data.selectedRoomIds) ? JSON.stringify(data.selectedRoomIds) : '[]'
 
     // Generate a unique ID
     const apartmentId = `apt_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
@@ -122,7 +123,7 @@ export async function POST(request: NextRequest) {
         "price", "cleaningFee", "maxGuests", "bedrooms", "beds", "bathrooms", "size",
         "address", "city", "country", "latitude", "longitude",
         "minStayNights", "maxStayNights", "isActive",
-        "airbnbId", "airbnbUrl", "images", "amenities",
+        "airbnbId", "airbnbUrl", "images", "amenities", "selectedRoomIds",
         "createdAt", "updatedAt"
       ) VALUES (
         $1, $2, $3, $4, $5,
@@ -133,7 +134,7 @@ export async function POST(request: NextRequest) {
         $16, $17, $18,
         $19::double precision, $20::double precision,
         $21::integer, $22::integer, $23::boolean,
-        $24, $25, '[]', '[]',
+        $24, $25, '[]', '[]', $26,
         NOW(), NOW()
       )
     `,
@@ -146,7 +147,7 @@ export async function POST(request: NextRequest) {
       address, city, country,
       finalLatitude, finalLongitude,
       finalMinStayNights, finalMaxStayNights, isActive,
-      airbnbId, airbnbUrl
+      airbnbId, airbnbUrl, selectedRoomIds
     )
 
     // Get the created apartment

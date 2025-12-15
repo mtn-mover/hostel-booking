@@ -15,7 +15,8 @@ import {
   MapPin,
   Sparkles,
   Image as ImageIcon,
-  Link as LinkIcon
+  Link as LinkIcon,
+  DoorOpen
 } from 'lucide-react'
 import { RoomImageManager } from './room-image-manager'
 
@@ -43,6 +44,7 @@ interface ApartmentData {
   airbnbUrl?: string | null
   apartmentImages?: any[]
   apartmentAmenities?: any[]
+  selectedRoomIds?: string[]
 }
 
 interface WizardProps {
@@ -66,17 +68,19 @@ const STEPS_EDIT: StepConfig[] = [
   { id: 'description', title: 'Beschreibungen', icon: <FileText className="w-5 h-5" />, description: 'Detaillierte Infos' },
   { id: 'location', title: 'Standort', icon: <MapPin className="w-5 h-5" />, description: 'Adresse und Ort' },
   { id: 'amenities', title: 'Ausstattung', icon: <Sparkles className="w-5 h-5" />, description: 'Annehmlichkeiten' },
+  { id: 'rooms', title: 'Räume', icon: <DoorOpen className="w-5 h-5" />, description: 'Vorhandene Räume' },
   { id: 'images', title: 'Bilder', icon: <ImageIcon className="w-5 h-5" />, description: 'Fotos hochladen' },
   { id: 'integration', title: 'Integration', icon: <LinkIcon className="w-5 h-5" />, description: 'Airbnb & Status' },
 ]
 
-// Steps for create mode (no images - upload after saving)
+// Steps for create mode (includes rooms but no images - upload after saving)
 const STEPS_CREATE: StepConfig[] = [
   { id: 'basic', title: 'Grunddaten', icon: <Home className="w-5 h-5" />, description: 'Titel und Beschreibung' },
   { id: 'details', title: 'Details', icon: <Users className="w-5 h-5" />, description: 'Gäste, Zimmer, Betten' },
   { id: 'description', title: 'Beschreibungen', icon: <FileText className="w-5 h-5" />, description: 'Detaillierte Infos' },
   { id: 'location', title: 'Standort', icon: <MapPin className="w-5 h-5" />, description: 'Adresse und Ort' },
   { id: 'amenities', title: 'Ausstattung', icon: <Sparkles className="w-5 h-5" />, description: 'Annehmlichkeiten' },
+  { id: 'rooms', title: 'Räume', icon: <DoorOpen className="w-5 h-5" />, description: 'Vorhandene Räume' },
   { id: 'integration', title: 'Integration', icon: <LinkIcon className="w-5 h-5" />, description: 'Airbnb & Status' },
 ]
 
@@ -101,7 +105,8 @@ const defaultFormData: ApartmentData = {
   airbnbId: '',
   airbnbUrl: '',
   apartmentImages: [],
-  apartmentAmenities: []
+  apartmentAmenities: [],
+  selectedRoomIds: []
 }
 
 export function ApartmentWizard({ mode, apartment, amenities, roomCategories }: WizardProps) {
@@ -141,10 +146,18 @@ export function ApartmentWizard({ mode, apartment, amenities, roomCategories }: 
     return []
   })
 
+  // Selected rooms
+  const [selectedRooms, setSelectedRooms] = useState<string[]>(() => {
+    if (mode === 'edit' && apartment?.selectedRoomIds) {
+      return apartment.selectedRoomIds
+    }
+    return []
+  })
+
   // Track changes
   useEffect(() => {
     setHasUnsavedChanges(true)
-  }, [formData, selectedAmenities])
+  }, [formData, selectedAmenities, selectedRooms])
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -167,6 +180,15 @@ export function ApartmentWizard({ mode, apartment, amenities, roomCategories }: 
         return prev.filter(id => id !== amenityId)
       }
       return [...prev, amenityId]
+    })
+  }
+
+  const toggleRoom = (roomId: string) => {
+    setSelectedRooms(prev => {
+      if (prev.includes(roomId)) {
+        return prev.filter(id => id !== roomId)
+      }
+      return [...prev, roomId]
     })
   }
 
@@ -237,6 +259,7 @@ export function ApartmentWizard({ mode, apartment, amenities, roomCategories }: 
         ...formData,
         isActive: publish ? true : formData.isActive,
         amenityIds: selectedAmenities,
+        selectedRoomIds: selectedRooms,
         // Set default values for hidden fields
         price: 0,
         cleaningFee: 0,
@@ -625,13 +648,70 @@ export function ApartmentWizard({ mode, apartment, amenities, roomCategories }: 
           </div>
         )
 
+      case 'rooms':
+        return (
+          <div className="space-y-6">
+            <div className="bg-blue-50 rounded-lg p-4">
+              <p className="text-blue-800">
+                <strong>{selectedRooms.length}</strong> {selectedRooms.length === 1 ? 'Raum' : 'Räume'} ausgewählt
+              </p>
+              <p className="text-sm text-blue-600 mt-1">
+                Wählen Sie die Räume aus, die in diesem Apartment vorhanden sind. Nur ausgewählte Räume werden beim Bilder-Upload angezeigt.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {roomCategories.map((room: any) => (
+                <label
+                  key={room.id}
+                  className={`flex items-center p-4 rounded-lg cursor-pointer border-2 transition-colors ${
+                    selectedRooms.includes(room.id)
+                      ? 'border-blue-500 bg-blue-50'
+                      : 'border-gray-200 hover:border-gray-300 bg-white'
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedRooms.includes(room.id)}
+                    onChange={() => toggleRoom(room.id)}
+                    className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 mr-3"
+                  />
+                  <div>
+                    <span className="font-medium text-gray-900">{room.nameDe}</span>
+                    {room.nameEn !== room.nameDe && (
+                      <span className="text-sm text-gray-500 ml-2">({room.nameEn})</span>
+                    )}
+                    {!room.isDefault && (
+                      <span className="ml-2 text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded">
+                        Custom
+                      </span>
+                    )}
+                  </div>
+                </label>
+              ))}
+            </div>
+
+            {selectedRooms.length === 0 && (
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                <p className="text-amber-800 text-sm">
+                  <strong>Hinweis:</strong> Wenn keine Räume ausgewählt sind, werden beim Bilder-Upload alle verfügbaren Raumkategorien angezeigt.
+                </p>
+              </div>
+            )}
+          </div>
+        )
+
       case 'images':
         // Images step only available in edit mode
+        // Filter to only show selected rooms
+        const filteredRoomCategories = selectedRooms.length > 0
+          ? roomCategories.filter((room: any) => selectedRooms.includes(room.id))
+          : roomCategories
         return (
           <RoomImageManager
             apartmentId={apartment?.id || ''}
             existingImages={apartment?.apartmentImages || []}
-            roomCategories={roomCategories}
+            roomCategories={filteredRoomCategories}
           />
         )
 

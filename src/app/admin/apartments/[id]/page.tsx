@@ -38,6 +38,14 @@ export default async function AdminApartmentEdit({ params }: Props) {
     notFound()
   }
 
+  // Parse selectedRoomIds from JSON string
+  const apartmentWithParsedRooms = {
+    ...apartment,
+    selectedRoomIds: apartment.selectedRoomIds
+      ? JSON.parse(apartment.selectedRoomIds)
+      : []
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -56,7 +64,7 @@ export default async function AdminApartmentEdit({ params }: Props) {
       {/* Wizard Form */}
       <ApartmentWizard
         mode="edit"
-        apartment={apartment}
+        apartment={apartmentWithParsedRooms}
         amenities={amenities}
         roomCategories={roomCategories}
       />
