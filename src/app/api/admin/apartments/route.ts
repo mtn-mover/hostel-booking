@@ -116,39 +116,82 @@ export async function POST(request: NextRequest) {
 
     // Create apartment using raw SQL to avoid binary protocol issues with Prisma Accelerate
     // Use text protocol by casting all values explicitly
-    await prisma.$executeRawUnsafe(`
-      INSERT INTO "Apartment" (
-        "id", "title", "name", "description", "shortDescription",
-        "theSpace", "guestAccess", "otherNotes",
-        "price", "cleaningFee", "maxGuests", "bedrooms", "beds", "bathrooms", "size",
-        "address", "city", "country", "latitude", "longitude",
-        "minStayNights", "maxStayNights", "isActive",
-        "airbnbId", "airbnbUrl", "images", "amenities", "selectedRoomIds",
-        "createdAt", "updatedAt"
-      ) VALUES (
-        $1, $2, $3, $4, $5,
-        $6, $7, $8,
-        $9::double precision, $10::double precision,
-        $11::integer, $12::integer, $13::integer,
-        $14::double precision, $15::integer,
-        $16, $17, $18,
-        $19::double precision, $20::double precision,
-        $21::integer, $22::integer, $23::boolean,
-        $24, $25, '[]', '[]', $26,
-        NOW(), NOW()
+    // Try with selectedRoomIds first, fallback without if column doesn't exist
+    try {
+      await prisma.$executeRawUnsafe(`
+        INSERT INTO "Apartment" (
+          "id", "title", "name", "description", "shortDescription",
+          "theSpace", "guestAccess", "otherNotes",
+          "price", "cleaningFee", "maxGuests", "bedrooms", "beds", "bathrooms", "size",
+          "address", "city", "country", "latitude", "longitude",
+          "minStayNights", "maxStayNights", "isActive",
+          "airbnbId", "airbnbUrl", "images", "amenities", "selectedRoomIds",
+          "createdAt", "updatedAt"
+        ) VALUES (
+          $1, $2, $3, $4, $5,
+          $6, $7, $8,
+          $9::double precision, $10::double precision,
+          $11::integer, $12::integer, $13::integer,
+          $14::double precision, $15::integer,
+          $16, $17, $18,
+          $19::double precision, $20::double precision,
+          $21::integer, $22::integer, $23::boolean,
+          $24, $25, '[]', '[]', $26,
+          NOW(), NOW()
+        )
+      `,
+        apartmentId,
+        title, name, description, shortDescription,
+        theSpace, guestAccess, otherNotes,
+        finalPrice, finalCleaningFee,
+        finalMaxGuests, finalBedrooms, finalBeds,
+        finalBathrooms, finalSize,
+        address, city, country,
+        finalLatitude, finalLongitude,
+        finalMinStayNights, finalMaxStayNights, isActive,
+        airbnbId, airbnbUrl, selectedRoomIds
       )
-    `,
-      apartmentId,
-      title, name, description, shortDescription,
-      theSpace, guestAccess, otherNotes,
-      finalPrice, finalCleaningFee,
-      finalMaxGuests, finalBedrooms, finalBeds,
-      finalBathrooms, finalSize,
-      address, city, country,
-      finalLatitude, finalLongitude,
-      finalMinStayNights, finalMaxStayNights, isActive,
-      airbnbId, airbnbUrl, selectedRoomIds
-    )
+    } catch (insertError) {
+      // If selectedRoomIds column doesn't exist, insert without it
+      const errorMsg = insertError instanceof Error ? insertError.message : ''
+      if (errorMsg.includes('selectedRoomIds') || errorMsg.includes('column')) {
+        await prisma.$executeRawUnsafe(`
+          INSERT INTO "Apartment" (
+            "id", "title", "name", "description", "shortDescription",
+            "theSpace", "guestAccess", "otherNotes",
+            "price", "cleaningFee", "maxGuests", "bedrooms", "beds", "bathrooms", "size",
+            "address", "city", "country", "latitude", "longitude",
+            "minStayNights", "maxStayNights", "isActive",
+            "airbnbId", "airbnbUrl", "images", "amenities",
+            "createdAt", "updatedAt"
+          ) VALUES (
+            $1, $2, $3, $4, $5,
+            $6, $7, $8,
+            $9::double precision, $10::double precision,
+            $11::integer, $12::integer, $13::integer,
+            $14::double precision, $15::integer,
+            $16, $17, $18,
+            $19::double precision, $20::double precision,
+            $21::integer, $22::integer, $23::boolean,
+            $24, $25, '[]', '[]',
+            NOW(), NOW()
+          )
+        `,
+          apartmentId,
+          title, name, description, shortDescription,
+          theSpace, guestAccess, otherNotes,
+          finalPrice, finalCleaningFee,
+          finalMaxGuests, finalBedrooms, finalBeds,
+          finalBathrooms, finalSize,
+          address, city, country,
+          finalLatitude, finalLongitude,
+          finalMinStayNights, finalMaxStayNights, isActive,
+          airbnbId, airbnbUrl
+        )
+      } else {
+        throw insertError
+      }
+    }
 
     // Get the created apartment
     const apartment = await prisma.apartment.findUnique({

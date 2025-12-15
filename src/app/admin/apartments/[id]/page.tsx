@@ -38,12 +38,21 @@ export default async function AdminApartmentEdit({ params }: Props) {
     notFound()
   }
 
-  // Parse selectedRoomIds from JSON string
+  // Parse selectedRoomIds from JSON string (with fallback for missing column)
+  let parsedRoomIds: string[] = []
+  try {
+    const rawSelectedRoomIds = (apartment as Record<string, unknown>).selectedRoomIds
+    if (rawSelectedRoomIds && typeof rawSelectedRoomIds === 'string') {
+      parsedRoomIds = JSON.parse(rawSelectedRoomIds)
+    }
+  } catch {
+    // Column might not exist in database yet
+    parsedRoomIds = []
+  }
+
   const apartmentWithParsedRooms = {
     ...apartment,
-    selectedRoomIds: apartment.selectedRoomIds
-      ? JSON.parse(apartment.selectedRoomIds)
-      : []
+    selectedRoomIds: parsedRoomIds
   }
 
   return (

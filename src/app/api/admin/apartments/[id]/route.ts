@@ -98,9 +98,18 @@ export async function PUT(request: NextRequest, { params }: Props) {
     const bookingHorizon = apartmentData.bookingHorizon !== undefined
       ? (apartmentData.bookingHorizon ? String(apartmentData.bookingHorizon) : null)
       : currentApartment.bookingHorizon
-    const selectedRoomIds = apartmentData.selectedRoomIds !== undefined
-      ? JSON.stringify(apartmentData.selectedRoomIds)
-      : currentApartment.selectedRoomIds
+    // Handle selectedRoomIds with fallback for missing column
+    let selectedRoomIds = '[]'
+    try {
+      const currentRoomIds = (currentApartment as Record<string, unknown>).selectedRoomIds
+      selectedRoomIds = apartmentData.selectedRoomIds !== undefined
+        ? JSON.stringify(apartmentData.selectedRoomIds)
+        : (typeof currentRoomIds === 'string' ? currentRoomIds : '[]')
+    } catch {
+      selectedRoomIds = apartmentData.selectedRoomIds !== undefined
+        ? JSON.stringify(apartmentData.selectedRoomIds)
+        : '[]'
+    }
 
     // Integer fields
     let maxGuests = currentApartment.maxGuests
@@ -190,46 +199,95 @@ export async function PUT(request: NextRequest, { params }: Props) {
     const isActive = apartmentData.isActive !== undefined ? Boolean(apartmentData.isActive) : currentApartment.isActive
 
     // Use raw SQL to update to avoid binary protocol issues
-    await prisma.$executeRawUnsafe(`
-      UPDATE "Apartment" SET
-        "title" = $1,
-        "description" = $2,
-        "shortDescription" = $3,
-        "theSpace" = $4,
-        "guestAccess" = $5,
-        "otherNotes" = $6,
-        "price" = $7::double precision,
-        "cleaningFee" = $8::double precision,
-        "maxGuests" = $9::integer,
-        "bedrooms" = $10::integer,
-        "beds" = $11::integer,
-        "bathrooms" = $12::double precision,
-        "size" = $13::integer,
-        "address" = $14,
-        "city" = $15,
-        "country" = $16,
-        "latitude" = $17::double precision,
-        "longitude" = $18::double precision,
-        "minStayNights" = $19::integer,
-        "maxStayNights" = $20::integer,
-        "isActive" = $21::boolean,
-        "airbnbId" = $22,
-        "airbnbUrl" = $23,
-        "bookingHorizon" = $24,
-        "selectedRoomIds" = $25,
-        "updatedAt" = NOW()
-      WHERE "id" = $26
-    `,
-      title, description, shortDescription,
-      theSpace, guestAccess, otherNotes,
-      price, cleaningFee,
-      maxGuests, bedrooms, beds, bathrooms, size,
-      address, city, country,
-      latitude, longitude,
-      minStayNights, maxStayNights, isActive,
-      airbnbId, airbnbUrl, bookingHorizon,
-      selectedRoomIds, id
-    )
+    // Try with selectedRoomIds first, fallback without if column doesn't exist
+    try {
+      await prisma.$executeRawUnsafe(`
+        UPDATE "Apartment" SET
+          "title" = $1,
+          "description" = $2,
+          "shortDescription" = $3,
+          "theSpace" = $4,
+          "guestAccess" = $5,
+          "otherNotes" = $6,
+          "price" = $7::double precision,
+          "cleaningFee" = $8::double precision,
+          "maxGuests" = $9::integer,
+          "bedrooms" = $10::integer,
+          "beds" = $11::integer,
+          "bathrooms" = $12::double precision,
+          "size" = $13::integer,
+          "address" = $14,
+          "city" = $15,
+          "country" = $16,
+          "latitude" = $17::double precision,
+          "longitude" = $18::double precision,
+          "minStayNights" = $19::integer,
+          "maxStayNights" = $20::integer,
+          "isActive" = $21::boolean,
+          "airbnbId" = $22,
+          "airbnbUrl" = $23,
+          "bookingHorizon" = $24,
+          "selectedRoomIds" = $25,
+          "updatedAt" = NOW()
+        WHERE "id" = $26
+      `,
+        title, description, shortDescription,
+        theSpace, guestAccess, otherNotes,
+        price, cleaningFee,
+        maxGuests, bedrooms, beds, bathrooms, size,
+        address, city, country,
+        latitude, longitude,
+        minStayNights, maxStayNights, isActive,
+        airbnbId, airbnbUrl, bookingHorizon,
+        selectedRoomIds, id
+      )
+    } catch (updateError) {
+      // If selectedRoomIds column doesn't exist, update without it
+      const errorMsg = updateError instanceof Error ? updateError.message : ''
+      if (errorMsg.includes('selectedRoomIds') || errorMsg.includes('column')) {
+        await prisma.$executeRawUnsafe(`
+          UPDATE "Apartment" SET
+            "title" = $1,
+            "description" = $2,
+            "shortDescription" = $3,
+            "theSpace" = $4,
+            "guestAccess" = $5,
+            "otherNotes" = $6,
+            "price" = $7::double precision,
+            "cleaningFee" = $8::double precision,
+            "maxGuests" = $9::integer,
+            "bedrooms" = $10::integer,
+            "beds" = $11::integer,
+            "bathrooms" = $12::double precision,
+            "size" = $13::integer,
+            "address" = $14,
+            "city" = $15,
+            "country" = $16,
+            "latitude" = $17::double precision,
+            "longitude" = $18::double precision,
+            "minStayNights" = $19::integer,
+            "maxStayNights" = $20::integer,
+            "isActive" = $21::boolean,
+            "airbnbId" = $22,
+            "airbnbUrl" = $23,
+            "bookingHorizon" = $24,
+            "updatedAt" = NOW()
+          WHERE "id" = $25
+        `,
+          title, description, shortDescription,
+          theSpace, guestAccess, otherNotes,
+          price, cleaningFee,
+          maxGuests, bedrooms, beds, bathrooms, size,
+          address, city, country,
+          latitude, longitude,
+          minStayNights, maxStayNights, isActive,
+          airbnbId, airbnbUrl, bookingHorizon,
+          id
+        )
+      } else {
+        throw updateError
+      }
+    }
 
     // Get updated apartment
     const updatedApartment = await prisma.apartment.findUnique({
