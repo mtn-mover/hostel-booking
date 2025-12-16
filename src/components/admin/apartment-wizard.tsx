@@ -341,8 +341,15 @@ export function ApartmentWizard({ mode, apartment, amenities, roomCategories }: 
         setSavedApartmentId(result.id)
         setShowImagePrompt(true)
       } else {
-        router.refresh()
-        setTimeout(() => setSuccess(null), 3000)
+        // In edit mode, check if we're on the last step
+        const isLastStep = currentStep === STEPS.length - 1
+        if (isLastStep) {
+          // Navigate back to overview after saving on last step
+          router.push('/admin/apartments')
+        } else {
+          router.refresh()
+          setTimeout(() => setSuccess(null), 3000)
+        }
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ein Fehler ist aufgetreten')
