@@ -16,7 +16,9 @@ import {
   Sparkles,
   Image as ImageIcon,
   Link as LinkIcon,
-  DoorOpen
+  DoorOpen,
+  Plus,
+  X
 } from 'lucide-react'
 import { RoomImageManager } from './room-image-manager'
 
@@ -154,6 +156,13 @@ export function ApartmentWizard({ mode, apartment, amenities, roomCategories }: 
     return []
   })
 
+  // Room management
+  const [availableRooms, setAvailableRooms] = useState(roomCategories)
+  const [showAddRoom, setShowAddRoom] = useState(false)
+  const [newRoomNameDe, setNewRoomNameDe] = useState('')
+  const [newRoomNameEn, setNewRoomNameEn] = useState('')
+  const [isAddingRoom, setIsAddingRoom] = useState(false)
+
   // Track changes
   useEffect(() => {
     setHasUnsavedChanges(true)
@@ -190,6 +199,42 @@ export function ApartmentWizard({ mode, apartment, amenities, roomCategories }: 
       }
       return [...prev, roomId]
     })
+  }
+
+  const handleAddRoom = async () => {
+    if (!newRoomNameDe.trim()) return
+
+    setIsAddingRoom(true)
+    try {
+      const englishName = newRoomNameEn.trim() || newRoomNameDe.trim()
+      const response = await fetch('/api/admin/room-categories', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: englishName,
+          nameDe: newRoomNameDe.trim(),
+          nameEn: englishName
+        })
+      })
+
+      if (response.ok) {
+        const newRoom = await response.json()
+        setAvailableRooms(prev => [...prev, newRoom])
+        // Automatically select the new room
+        setSelectedRooms(prev => [...prev, newRoom.id])
+        setNewRoomNameDe('')
+        setNewRoomNameEn('')
+        setShowAddRoom(false)
+      } else {
+        const error = await response.json()
+        alert(error.message || 'Fehler beim Erstellen des Raums')
+      }
+    } catch (error) {
+      console.error('Add room error:', error)
+      alert('Fehler beim Erstellen des Raums')
+    } finally {
+      setIsAddingRoom(false)
+    }
   }
 
   const validateStep = (step: number): boolean => {
@@ -660,8 +705,81 @@ export function ApartmentWizard({ mode, apartment, amenities, roomCategories }: 
               </p>
             </div>
 
+            {/* Add new room button/form */}
+            {!showAddRoom ? (
+              <button
+                type="button"
+                onClick={() => setShowAddRoom(true)}
+                className="flex items-center gap-2 px-4 py-2 text-blue-600 border border-blue-300 rounded-lg hover:bg-blue-50 transition-colors"
+              >
+                <Plus className="w-4 h-4" />
+                Neuen Raum erstellen
+              </button>
+            ) : (
+              <div className="bg-gray-50 rounded-lg p-4 space-y-4">
+                <div className="flex justify-between items-center">
+                  <h4 className="font-medium text-gray-900">Neuen Raum erstellen</h4>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowAddRoom(false)
+                      setNewRoomNameDe('')
+                      setNewRoomNameEn('')
+                    }}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Name (Deutsch) *
+                    </label>
+                    <input
+                      type="text"
+                      value={newRoomNameDe}
+                      onChange={(e) => setNewRoomNameDe(e.target.value)}
+                      placeholder="z.B. Wintergarten"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Name (English)
+                    </label>
+                    <input
+                      type="text"
+                      value={newRoomNameEn}
+                      onChange={(e) => setNewRoomNameEn(e.target.value)}
+                      placeholder="z.B. Conservatory"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleAddRoom}
+                  disabled={!newRoomNameDe.trim() || isAddingRoom}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                >
+                  {isAddingRoom ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Wird erstellt...
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="w-4 h-4" />
+                      Raum erstellen
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
+
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {roomCategories.map((room: any) => (
+              {availableRooms.map((room: any) => (
                 <label
                   key={room.id}
                   className={`flex items-center p-4 rounded-lg cursor-pointer border-2 transition-colors ${
@@ -705,8 +823,8 @@ export function ApartmentWizard({ mode, apartment, amenities, roomCategories }: 
         // Images step only available in edit mode
         // Filter to only show selected rooms
         const filteredRoomCategories = selectedRooms.length > 0
-          ? roomCategories.filter((room: any) => selectedRooms.includes(room.id))
-          : roomCategories
+          ? availableRooms.filter((room: any) => selectedRooms.includes(room.id))
+          : availableRooms
         return (
           <RoomImageManager
             apartmentId={apartment?.id || ''}
@@ -1017,7 +1135,8 @@ export function ApartmentWizard({ mode, apartment, amenities, roomCategories }: 
               <button
                 onClick={() => {
                   setShowImagePrompt(false)
-                  router.push(`/admin/apartments/${savedApartmentId}/images`)
+                  // Navigate to edit mode with images step
+                  router.push(`/admin/apartments/${savedApartmentId}`)
                 }}
                 className="w-full flex items-center justify-center px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
               >
@@ -1028,11 +1147,11 @@ export function ApartmentWizard({ mode, apartment, amenities, roomCategories }: 
               <button
                 onClick={() => {
                   setShowImagePrompt(false)
-                  router.push(`/admin/apartments/${savedApartmentId}`)
+                  router.push(`/admin/apartments/${savedApartmentId}/preview`)
                 }}
                 className="w-full flex items-center justify-center px-6 py-3 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors"
               >
-                Später, zum Apartment
+                Vorschau anzeigen
               </button>
 
               <button
