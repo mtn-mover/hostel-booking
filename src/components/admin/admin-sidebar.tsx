@@ -4,9 +4,9 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
 const adminNavItems = [
-  { href: '/admin', label: 'Dashboard', icon: '📊' },
+  // { href: '/admin', label: 'Dashboard', icon: '📊' }, // Temporarily hidden - no bookings yet
   { href: '/admin/apartments', label: 'Apartments', icon: '🏠' },
-  { href: '/admin/bookings', label: 'Bookings', icon: '📅' },
+  // { href: '/admin/bookings', label: 'Bookings', icon: '📅' }, // Temporarily hidden - no bookings yet
   { href: '/admin/users', label: 'Users', icon: '👥' },
   { href: '/admin/reviews', label: 'Reviews', icon: '⭐' },
   { href: '/admin/knowledge-base', label: 'Knowledge Base', icon: '📖' },
