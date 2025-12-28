@@ -6,7 +6,10 @@ export async function GET() {
     const apartments = await prisma.apartment.findMany({
       include: {
         apartmentImages: {
-          where: { isMain: true },
+          orderBy: [
+            { isMain: 'desc' },  // Main images first
+            { order: 'asc' }     // Then by order
+          ],
           take: 1
         },
         _count: {

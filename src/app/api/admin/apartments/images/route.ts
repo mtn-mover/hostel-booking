@@ -60,6 +60,14 @@ export async function POST(request: NextRequest) {
 
     let currentOrder = existingImages[0]?.order || -1
 
+    // Check if apartment has any main image
+    const hasMainImage = await prisma.apartmentImage.findFirst({
+      where: {
+        apartmentId,
+        isMain: true
+      }
+    })
+
     const uploadedImages = []
 
     for (let i = 0; i < images.length; i++) {
@@ -99,13 +107,17 @@ export async function POST(request: NextRequest) {
         altText = image.name.replace(/\.[^/.]+$/, '')
       }
 
+      // Set first image as main if no main image exists yet
+      const shouldBeMain = !hasMainImage && i === 0 && currentOrder === 0
+
       const dbImage = await prisma.apartmentImage.create({
         data: {
           apartmentId,
           roomId,
           url: dataUrl,
           alt: altText,
-          order: currentOrder
+          order: currentOrder,
+          isMain: shouldBeMain
         }
       })
 
