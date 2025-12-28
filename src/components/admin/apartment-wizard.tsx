@@ -118,17 +118,18 @@ export function ApartmentWizard({ mode, apartment, amenities, roomCategories }: 
   // Use different steps based on mode
   const STEPS = mode === 'create' ? STEPS_CREATE : STEPS_EDIT
 
-  // Initialize step from URL parameter or default to 0
-  const getInitialStep = () => {
+  const [currentStep, setCurrentStep] = useState(0)
+
+  // Set initial step from URL parameter after mount
+  useEffect(() => {
     const stepParam = searchParams.get('step')
     if (stepParam) {
       const stepIndex = STEPS.findIndex(s => s.id === stepParam)
-      if (stepIndex !== -1) return stepIndex
+      if (stepIndex !== -1) {
+        setCurrentStep(stepIndex)
+      }
     }
-    return 0
-  }
-
-  const [currentStep, setCurrentStep] = useState(getInitialStep)
+  }, [searchParams, STEPS])
   const [isLoading, setIsLoading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
