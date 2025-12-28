@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import {
   ChevronLeft,
   ChevronRight,
@@ -113,7 +113,22 @@ const defaultFormData: ApartmentData = {
 
 export function ApartmentWizard({ mode, apartment, amenities, roomCategories }: WizardProps) {
   const router = useRouter()
-  const [currentStep, setCurrentStep] = useState(0)
+  const searchParams = useSearchParams()
+
+  // Use different steps based on mode
+  const STEPS = mode === 'create' ? STEPS_CREATE : STEPS_EDIT
+
+  // Initialize step from URL parameter or default to 0
+  const getInitialStep = () => {
+    const stepParam = searchParams.get('step')
+    if (stepParam) {
+      const stepIndex = STEPS.findIndex(s => s.id === stepParam)
+      if (stepIndex !== -1) return stepIndex
+    }
+    return 0
+  }
+
+  const [currentStep, setCurrentStep] = useState(getInitialStep)
   const [isLoading, setIsLoading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -121,9 +136,6 @@ export function ApartmentWizard({ mode, apartment, amenities, roomCategories }: 
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
   const [showImagePrompt, setShowImagePrompt] = useState(false)
   const [savedApartmentId, setSavedApartmentId] = useState<string | null>(null)
-
-  // Use different steps based on mode
-  const STEPS = mode === 'create' ? STEPS_CREATE : STEPS_EDIT
 
   // Form state
   const [formData, setFormData] = useState<ApartmentData>(() => {
@@ -1143,7 +1155,7 @@ export function ApartmentWizard({ mode, apartment, amenities, roomCategories }: 
                 onClick={() => {
                   setShowImagePrompt(false)
                   // Navigate to edit mode with images step
-                  router.push(`/admin/apartments/${savedApartmentId}`)
+                  router.push(`/admin/apartments/${savedApartmentId}?step=images`)
                 }}
                 className="w-full flex items-center justify-center px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
               >
