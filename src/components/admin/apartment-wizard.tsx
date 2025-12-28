@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import {
   ChevronLeft,
   ChevronRight,
@@ -54,6 +54,7 @@ interface WizardProps {
   apartment?: ApartmentData
   amenities: any[]
   roomCategories: any[]
+  initialStep?: string
 }
 
 interface StepConfig {
@@ -111,25 +112,22 @@ const defaultFormData: ApartmentData = {
   selectedRoomIds: []
 }
 
-export function ApartmentWizard({ mode, apartment, amenities, roomCategories }: WizardProps) {
+export function ApartmentWizard({ mode, apartment, amenities, roomCategories, initialStep }: WizardProps) {
   const router = useRouter()
-  const searchParams = useSearchParams()
 
   // Use different steps based on mode
   const STEPS = mode === 'create' ? STEPS_CREATE : STEPS_EDIT
 
-  const [currentStep, setCurrentStep] = useState(0)
-
-  // Set initial step from URL parameter after mount
-  useEffect(() => {
-    const stepParam = searchParams.get('step')
-    if (stepParam) {
-      const stepIndex = STEPS.findIndex(s => s.id === stepParam)
-      if (stepIndex !== -1) {
-        setCurrentStep(stepIndex)
-      }
+  // Calculate initial step index from prop
+  const getInitialStepIndex = () => {
+    if (initialStep) {
+      const stepIndex = STEPS.findIndex(s => s.id === initialStep)
+      if (stepIndex !== -1) return stepIndex
     }
-  }, [searchParams, STEPS])
+    return 0
+  }
+
+  const [currentStep, setCurrentStep] = useState(getInitialStepIndex)
   const [isLoading, setIsLoading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)

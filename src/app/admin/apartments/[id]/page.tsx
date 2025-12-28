@@ -7,10 +7,14 @@ interface Props {
   params: Promise<{
     id: string
   }>
+  searchParams: Promise<{
+    step?: string
+  }>
 }
 
-export default async function AdminApartmentEdit({ params }: Props) {
+export default async function AdminApartmentEdit({ params, searchParams }: Props) {
   const resolvedParams = await params
+  const resolvedSearchParams = await searchParams
   const [apartment, amenities, roomCategories] = await Promise.all([
     prisma.apartment.findUnique({
       where: { id: resolvedParams.id },
@@ -76,6 +80,7 @@ export default async function AdminApartmentEdit({ params }: Props) {
         apartment={apartmentWithParsedRooms}
         amenities={amenities}
         roomCategories={roomCategories}
+        initialStep={resolvedSearchParams.step}
       />
     </div>
   )
