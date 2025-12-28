@@ -67,6 +67,7 @@ export function Navigation() {
                     <div className="px-4 py-2 text-sm text-gray-700 border-b">
                       {session.user.email}
                     </div>
+                    {/* Temporarily hidden - no bookings yet
                     <Link
                       href="/profile"
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
@@ -81,6 +82,7 @@ export function Navigation() {
                     >
                       My Bookings
                     </Link>
+                    */}
                     {session.user.role === 'ADMIN' && (
                       <Link
                         href="/admin"
